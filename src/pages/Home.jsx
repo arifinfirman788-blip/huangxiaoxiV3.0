@@ -120,9 +120,8 @@ const Home = () => {
                     <div className="flex gap-2 min-w-max">
                       {[
                         { name: '行程规划', icon: MapPin },
-                        { name: '旅居管家', icon: HomeIcon },
-                        { name: '特产订购', icon: Star },
-                        { name: '私人伴游', icon: User },
+                        { name: '帮我写游记', icon: HomeIcon },
+                        { name: 'AI伴游', icon: User },
                       ].map((agent, index) => (
                         <motion.button 
                           key={index}
