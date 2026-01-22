@@ -158,18 +158,30 @@ const Trip = ({ adoptedTrip }) => {
       <AnimatePresence>
         {isCompareMode && selectedTrips.length >= 2 && (
           <motion.div 
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="absolute bottom-24 left-6 right-6 z-50"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute bottom-28 right-6 z-50"
           >
-            <button 
-              onClick={handleStartCompare}
-              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg shadow-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
-            >
-              <Scale size={20} className="text-yellow-400" />
-              开始对比 ({selectedTrips.length})
-            </button>
+            <div className="relative group">
+               {/* Tooltip */}
+               <div className="absolute bottom-full right-0 mb-3 w-max opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                 <div className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl mb-1">
+                   点击开始对比
+                 </div>
+               </div>
+
+               <button 
+                onClick={handleStartCompare}
+                className="w-16 h-16 bg-cyan-500 text-white rounded-full shadow-2xl shadow-cyan-200 flex flex-col items-center justify-center active:scale-95 transition-transform relative border-4 border-white gap-0.5"
+               >
+                <span className="text-[10px] font-bold leading-none">开始</span>
+                <span className="text-[10px] font-bold leading-none">比对</span>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm">
+                  {selectedTrips.length}
+                </div>
+               </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

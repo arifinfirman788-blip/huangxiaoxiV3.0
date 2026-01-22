@@ -122,17 +122,20 @@ const BottomNav = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
           />
           
           {/* Central Plus Button */}
-          <div className="relative -top-5 z-20">
+          <div className="relative z-20">
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={toggleMenu}
-              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-4 transition-colors relative ${isMenuOpen ? 'bg-slate-800 text-white border-slate-50' : 'bg-gradient-to-tr from-cyan-400 to-blue-500 text-white border-white/20'} ${guideStep === 1 ? 'ring-8 ring-cyan-400/30 animate-pulse scale-110' : ''}`}
+              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-[0_8px_20px_rgba(6,182,212,0.4)] border-4 transition-all duration-300 relative ${isMenuOpen ? 'bg-slate-800 text-white border-slate-50' : 'bg-gradient-to-br from-cyan-400 to-blue-500 text-white border-white/20'} ${guideStep === 1 ? 'ring-8 ring-cyan-400/30 animate-pulse scale-110' : ''}`}
+              style={{
+                boxShadow: isMenuOpen ? '0 10px 25px -5px rgba(15, 23, 42, 0.5)' : '0 10px 25px -5px rgba(6, 182, 212, 0.5), inset 0 2px 5px rgba(255,255,255,0.3)',
+              }}
             >
               <motion.div
                 animate={{ rotate: isMenuOpen ? 45 : 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
-                <Plus size={28} strokeWidth={2.5} />
+                <Plus size={28} strokeWidth={2.5} className="drop-shadow-md" />
               </motion.div>
             </motion.button>
           </div>
