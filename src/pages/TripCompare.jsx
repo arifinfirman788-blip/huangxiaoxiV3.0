@@ -7,6 +7,7 @@ const TripCompare = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { trips } = location.state || { trips: [] };
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'details'
   const [highlightsModal, setHighlightsModal] = useState(null); // stores trip data for modal
 
   if (!trips || trips.length === 0) {
@@ -31,17 +32,49 @@ const TripCompare = () => {
   ];
 
   // Mock data enhancement for comparison if missing
-  const enhancedTrips = trips.map(trip => ({
-    ...trip,
-    budget: trip.budget || `¥${Math.floor(Math.random() * 3000) + 2000}`,
-    pace: trip.pace || ['轻松', '适中', '紧凑'][Math.floor(Math.random() * 3)],
-    theme: trip.theme || ['适合亲子', '适合人文', '适合摄影', '休闲度假'][Math.floor(Math.random() * 4)],
-    efficiency: trip.efficiency || (Math.random() > 0.3 ? '顺路不绕行' : '轻微绕路'),
-    highlightsCount: trip.itinerary ? trip.itinerary.flatMap(d => d.timeline.filter(t => t.type === 'scenic')).length : Math.floor(Math.random() * 5) + 3,
-    highlightsList: trip.itinerary 
-      ? trip.itinerary.flatMap(d => d.timeline.filter(t => t.type === 'scenic').map(t => t.title)) 
-      : ['黄果树瀑布', '天星桥', '陡坡塘', '青岩古镇', '甲秀楼']
-  }));
+  const enhancedTrips = trips.map((trip, tripIndex) => {
+    // Generate mock itinerary for deep dive if missing
+    const detailedItinerary = trip.itinerary || Array.from({ length: trip.days || 3 }).map((_, dayIndex) => {
+       // Create some overlapping and some unique spots
+       const commonSpots = [
+         { name: '黄果树瀑布', type: 'scenic', desc: '亚洲第一大瀑布，震撼壮观', tag: '必打卡' },
+         { name: '甲秀楼', type: 'scenic', desc: '贵阳地标，夜景绝美', tag: '人文' }
+       ];
+       const uniqueSpotsA = [
+         { name: '天星桥', type: 'scenic', desc: '喀斯特地貌精华，水上石林', tag: '自然' },
+         { name: '陡坡塘', type: 'scenic', desc: '西游记取景地', tag: '怀旧' }
+       ];
+       const uniqueSpotsB = [
+         { name: '青岩古镇', type: 'scenic', desc: '明清古建筑群，特色美食', tag: '古镇' },
+         { name: '花溪夜郎谷', type: 'scenic', desc: '石头城堡，神秘奇特', tag: '艺术' }
+       ];
+       
+       let spots = [];
+       if (dayIndex === 0) {
+           spots = [...commonSpots, ...(tripIndex % 2 === 0 ? uniqueSpotsA : uniqueSpotsB)];
+       } else {
+           spots = tripIndex % 2 === 0 ? uniqueSpotsA : uniqueSpotsB;
+       }
+       
+       return {
+           day: dayIndex + 1,
+           spots: spots
+       };
+    });
+
+    return {
+      ...trip,
+      budget: trip.budget || `¥${Math.floor(Math.random() * 3000) + 2000}`,
+      pace: trip.pace || ['轻松', '适中', '紧凑'][Math.floor(Math.random() * 3)],
+      theme: trip.theme || ['适合亲子', '适合人文', '适合摄影', '休闲度假'][Math.floor(Math.random() * 4)],
+      efficiency: trip.efficiency || (Math.random() > 0.3 ? '顺路不绕行' : '轻微绕路'),
+      highlightsCount: trip.itinerary ? trip.itinerary.flatMap(d => d.timeline.filter(t => t.type === 'scenic')).length : detailedItinerary.flatMap(d => d.spots).length,
+      highlightsList: trip.itinerary 
+        ? trip.itinerary.flatMap(d => d.timeline.filter(t => t.type === 'scenic').map(t => t.title)) 
+        : detailedItinerary.flatMap(d => d.spots.map(s => s.name)),
+      detailedItinerary
+    };
+  });
 
   // Determine winner for each numeric/logic dimension
   const getWinnerId = (key) => {
@@ -73,8 +106,27 @@ const TripCompare = () => {
           <div className="w-10" />
         </div>
 
+        {/* Tab Controls */}
+        <div className="px-6 py-2">
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+                <button 
+                    onClick={() => setActiveTab('overview')}
+                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'overview' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}
+                >
+                    行程概览
+                </button>
+                <button 
+                    onClick={() => setActiveTab('details')}
+                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeTab === 'details' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}
+                >
+                    深度对比
+                </button>
+            </div>
+        </div>
+
         <div className="p-6 pb-24">
-          {/* Comparison Table */}
+          {activeTab === 'overview' ? (
+          /* Comparison Table */
           <div className="bg-slate-50 rounded-[2rem] p-6 border border-slate-100">
             
             {/* Header Row */}
@@ -152,6 +204,129 @@ const TripCompare = () => {
               })}
             </div>
           </div>
+          ) : (
+            /* Deep Dive View */
+            <div className="space-y-8">
+                {/* Day by Day Comparison */}
+                {Array.from({ length: Math.max(...enhancedTrips.map(t => t.days || 3)) }).map((_, dayIndex) => {
+                    const day = dayIndex + 1;
+                    // Collect spots for this day from all trips
+                    const daySpotsMap = {};
+                    enhancedTrips.forEach(trip => {
+                        const dayItinerary = trip.detailedItinerary.find(d => d.day === day);
+                        if (dayItinerary) {
+                            dayItinerary.spots.forEach(spot => {
+                                if (!daySpotsMap[spot.name]) {
+                                    daySpotsMap[spot.name] = { ...spot, trips: [] };
+                                }
+                                daySpotsMap[spot.name].trips.push(trip.id);
+                            });
+                        }
+                    });
+
+                    const allSpots = Object.values(daySpotsMap);
+                    const commonSpots = allSpots.filter(s => s.trips.length === enhancedTrips.length);
+                    const diffSpots = allSpots.filter(s => s.trips.length < enhancedTrips.length);
+
+                    if (allSpots.length === 0) return null;
+
+                    return (
+                        <div key={day} className="bg-slate-50 rounded-[2rem] p-5 border border-slate-100">
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="bg-slate-900 text-white text-xs font-bold px-2.5 py-1 rounded-lg">Day {day}</span>
+                                <h3 className="font-bold text-slate-800">行程节点对比</h3>
+                            </div>
+
+                            {/* Common Spots */}
+                            {commonSpots.length > 0 && (
+                                <div className="mb-6">
+                                    <h4 className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                                        <Check size={12} className="text-green-500" />
+                                        共同包含 ({commonSpots.length})
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {commonSpots.map((spot, i) => (
+                                            <div key={i} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <span className="font-bold text-slate-800 text-sm">{spot.name}</span>
+                                                    <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{spot.tag}</span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 leading-tight line-clamp-2">{spot.desc}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Differences */}
+                            {diffSpots.length > 0 && (
+                                <div>
+                                    <h4 className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                                        <Activity size={12} className="text-orange-500" />
+                                        差异对比
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {enhancedTrips.map(trip => {
+                                            const tripUniqueSpots = diffSpots.filter(s => s.trips.includes(trip.id));
+                                            const missingSpots = diffSpots.filter(s => !s.trips.includes(trip.id));
+                                            
+                                            return (
+                                                <div key={trip.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm relative overflow-hidden">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <img src={trip.image} className="w-6 h-6 rounded-full object-cover border border-slate-200" />
+                                                        <span className="font-bold text-xs text-slate-700 truncate max-w-[120px]">{trip.title}</span>
+                                                    </div>
+                                                    
+                                                    {/* Unique Spots (Gains) */}
+                                                    {tripUniqueSpots.length > 0 && (
+                                                        <div className="mb-3">
+                                                            <div className="flex items-center gap-1.5 mb-1.5">
+                                                                <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">独有体验</span>
+                                                            </div>
+                                                            <ul className="space-y-1.5">
+                                                                {tripUniqueSpots.map((s, i) => (
+                                                                    <li key={i} className="flex items-start gap-2">
+                                                                        <div className="w-1 h-1 rounded-full bg-green-400 mt-1.5 shrink-0" />
+                                                                        <div>
+                                                                            <span className="text-xs font-bold text-slate-700">{s.name}</span>
+                                                                            <span className="text-[10px] text-slate-400 ml-1">- {s.desc}</span>
+                                                                        </div>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Missing Spots (Losses) */}
+                                                    {missingSpots.length > 0 && (
+                                                        <div>
+                                                            <div className="flex items-center gap-1.5 mb-1.5">
+                                                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">未包含</span>
+                                                            </div>
+                                                            <p className="text-[10px] text-slate-400 leading-relaxed">
+                                                                相比其他方案，将错过 
+                                                                {missingSpots.map((s, i) => (
+                                                                    <span key={i} className="font-bold text-slate-500 mx-1">{s.name}</span>
+                                                                ))}
+                                                                等体验 ({missingSpots[0]?.desc})
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {tripUniqueSpots.length === 0 && missingSpots.length === 0 && (
+                                                        <p className="text-xs text-slate-400 italic">与其他方案行程一致</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+          )}
         </div>
       </div>
 
