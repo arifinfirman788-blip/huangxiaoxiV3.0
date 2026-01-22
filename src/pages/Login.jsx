@@ -43,7 +43,7 @@ const Login = ({ onLogin }) => {
 
   // Background Video
   // const bgVideo = "/video/background.mp4"; // Local video file
-  const bgVideo = "/video/guizhou_seasons.mp4"; // Local video file
+  const bgVideo = `${import.meta.env.BASE_URL}video/guizhou_seasons.mp4`;
 
   return (
     <div className="h-full w-full relative bg-slate-900 overflow-hidden font-sans text-white">
