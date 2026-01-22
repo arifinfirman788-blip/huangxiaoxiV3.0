@@ -170,12 +170,85 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
           {/* News Marquee */}
           <NewsMarquee />
 
-          {/* Smart Notification Area (New) */}
+
+
+          {/* Typewriter Effect */}
+          <div className="mb-8">
+
+          {/* Hero / Chat Section */}
+          <section className="mb-8 mt-24">
+            <div className="relative">
+              {/* Character Image - Positioned behind content, slightly lower to be covered by container */}
+              <div className="absolute -top-16 -right-6 w-40 h-40 pointer-events-none z-0">
+                 <img 
+                   src={TuoSaiImage} 
+                   alt="Character" 
+                   className="w-full h-full object-contain drop-shadow-lg"
+                 />
+              </div>
+
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-white/40 backdrop-blur-xl border border-white/60 p-5 rounded-blob-1 shadow-float relative z-10 overflow-visible flex flex-col items-center text-center"
+              >
+                <TypewriterText />
+                <p className="text-slate-500 text-xs mb-6">开启一段新的旅程或寻求帮助</p>
+  
+                <div className="w-full">
+                  {/* Functional Agents as Capsule Buttons (Scrollable Row) - Now tightly coupled above input */}
+                  <div className="w-full overflow-x-auto scrollbar-hide mb-3 -mx-2 px-2">
+                    <div className="flex gap-2 min-w-max">
+                      {[
+                        { name: '行程规划', icon: MapPin },
+                        { name: '帮我写游记', icon: HomeIcon },
+                        { name: 'AI伴游', icon: User },
+                      ].map((agent, index) => (
+                        <motion.button 
+                          key={index}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleNav('/chat-planning')}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-slate-100 text-slate-600 whitespace-nowrap"
+                        >
+                          <agent.icon size={14} className="text-cyan-500" />
+                          <span className="text-[10px] font-bold">{agent.name}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+  
+                  {/* Integrated Chat Input Area */}
+                  <div className="w-full relative">
+                    <div className="bg-white rounded-[2rem] p-3 pr-4 shadow-lg flex items-center gap-2 border border-slate-100 cursor-pointer hover:shadow-xl transition-shadow"
+                         onClick={() => handleNav('/chat-planning')}
+                    >
+                      <input 
+                        type="text" 
+                        placeholder="请输入您感兴趣的主题..." 
+                        className="bg-transparent outline-none w-full text-slate-700 placeholder-slate-400 text-sm pl-2 cursor-pointer"
+                        readOnly
+                      />
+                      
+                      <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0">
+                        <ArrowUpRight size={18} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </section>
+
+          {/* Entity Agents Categories (Masonry Style with Images) - REMOVED per request */}
+          {/* <section className="mb-24"> ... </section> */}
+          </div>
+
+          {/* Smart Notification Area (Moved) */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={() => adoptedTrip && handleNav(`/trip/${adoptedTrip.id}`)}
-            className="w-full bg-white/80 backdrop-blur-xl rounded-[1.5rem] p-5 -mt-8 mb-8 border border-white shadow-lg shadow-slate-200/50 min-h-[100px] flex flex-col justify-center relative overflow-hidden group cursor-pointer active:scale-98 transition-all"
+            className="w-full bg-white/80 backdrop-blur-xl rounded-[1.5rem] p-4 mb-8 border border-white shadow-lg shadow-slate-200/50 min-h-[90px] flex flex-col justify-center relative overflow-hidden group cursor-pointer active:scale-98 transition-all"
           >
             {/* Decorative gradient blob */}
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-br from-cyan-100/50 to-blue-100/50 blur-2xl rounded-full opacity-60 pointer-events-none" />
@@ -188,39 +261,39 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
                
                return (
                  <>
-                   <div className="relative z-10 w-full flex items-center gap-4">
-                     {/* Left: Time/Icon */}
-                     <div className="flex flex-col items-center justify-center w-14 h-14 bg-cyan-50 rounded-xl shrink-0 text-cyan-600 border border-cyan-100 shadow-sm">
-                        {nextNode?.type === 'flight' ? <Plane size={24} /> : <Clock size={24} />}
-                        <span className="text-[10px] font-bold mt-0.5">{nextNode?.time}</span>
+                   <div className="relative z-10 w-full flex items-center gap-3">
+                     {/* Left: Integrated AI Reminder */}
+                     <div className="w-24 bg-orange-50/50 rounded-xl p-2 border border-orange-100/50 flex flex-col justify-center gap-1 shrink-0 h-full">
+                        <div className="flex items-center gap-1 text-orange-600">
+                           <Sparkles size={10} className="shrink-0" />
+                           <span className="text-[10px] font-bold">黄小西</span>
+                        </div>
+                        <p className="text-[9px] text-slate-500 leading-tight line-clamp-2">
+                          {getAiReminder(nextNode)}
+                        </p>
                      </div>
 
                      {/* Right: Info */}
-                     <div className="flex-1">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="text-xs font-bold text-cyan-600 bg-cyan-50/80 px-2 py-0.5 rounded-full border border-cyan-100/50 shadow-sm">
+                     <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center mb-0.5">
+                          <h3 className="text-sm font-bold text-slate-800 line-clamp-1">{nextNode?.title}</h3>
+                          <span className="text-[10px] font-bold text-cyan-600 bg-cyan-50/80 px-1.5 py-0.5 rounded-full border border-cyan-100/50 shadow-sm shrink-0">
                             {nextNode?.status === 'upcoming' ? '进行中' : '即将开始'}
                           </span>
-                          <ChevronDown size={14} className="-rotate-90 text-slate-300" />
                         </div>
-                        <h3 className="text-sm font-bold text-slate-800 mb-0.5">{nextNode?.title}</h3>
-                        <p className="text-[10px] text-slate-500 line-clamp-1">
+                        <p className="text-[10px] text-slate-400 line-clamp-1 mb-1">
                           {nextNode?.type === 'flight' 
                             ? `${nextNode.details.flightNo} ${nextNode.details.status} · 预计${nextNode.details.arrTime}抵达`
                             : nextNode?.details?.name || '点击查看详情'}
                         </p>
+                        
+                        <div className="flex items-center gap-2">
+                           <div className="flex items-center gap-1.5 text-slate-400">
+                              {nextNode?.type === 'flight' ? <Plane size={12} /> : <Clock size={12} />}
+                              <span className="text-[10px] font-bold">{nextNode?.time}</span>
+                           </div>
+                        </div>
                      </div>
-                   </div>
-
-                   {/* AI Warm Reminder */}
-                   <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 flex items-start gap-2.5">
-                     <div className="bg-gradient-to-r from-orange-400 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1 shadow-sm">
-                        <Sparkles size={10} /> 
-                        黄小西提醒
-                     </div>
-                     <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                       {getAiReminder(nextNode)}
-                     </p>
                    </div>
                  </>
                );
@@ -292,77 +365,6 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
               </div>
             )}
           </motion.div>
-
-          {/* Typewriter Effect */}
-          <div className="mb-8">
-
-          {/* Hero / Chat Section */}
-          <section className="mb-10 mt-12">
-            <div className="relative">
-              {/* Character Image - Positioned behind content, slightly lower to be covered by container */}
-              <div className="absolute -top-16 -right-6 w-40 h-40 pointer-events-none z-0">
-                 <img 
-                   src={TuoSaiImage} 
-                   alt="Character" 
-                   className="w-full h-full object-contain drop-shadow-lg"
-                 />
-              </div>
-
-              <motion.div 
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="bg-white/40 backdrop-blur-xl border border-white/60 p-5 rounded-blob-1 shadow-float relative z-10 overflow-visible flex flex-col items-center text-center"
-              >
-                <TypewriterText />
-                <p className="text-slate-500 text-xs mb-6">开启一段新的旅程或寻求帮助</p>
-  
-                <div className="w-full">
-                  {/* Functional Agents as Capsule Buttons (Scrollable Row) - Now tightly coupled above input */}
-                  <div className="w-full overflow-x-auto scrollbar-hide mb-3 -mx-2 px-2">
-                    <div className="flex gap-2 min-w-max">
-                      {[
-                        { name: '行程规划', icon: MapPin },
-                        { name: '帮我写游记', icon: HomeIcon },
-                        { name: 'AI伴游', icon: User },
-                      ].map((agent, index) => (
-                        <motion.button 
-                          key={index}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleNav('/chat-planning')}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-slate-100 text-slate-600 whitespace-nowrap"
-                        >
-                          <agent.icon size={14} className="text-cyan-500" />
-                          <span className="text-[10px] font-bold">{agent.name}</span>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-  
-                  {/* Integrated Chat Input Area */}
-                  <div className="w-full relative">
-                    <div className="bg-white rounded-[2rem] p-3 pr-4 shadow-lg flex items-center gap-2 border border-slate-100 cursor-pointer hover:shadow-xl transition-shadow"
-                         onClick={() => handleNav('/chat-planning')}
-                    >
-                      <input 
-                        type="text" 
-                        placeholder="请输入您感兴趣的主题..." 
-                        className="bg-transparent outline-none w-full text-slate-700 placeholder-slate-400 text-sm pl-2 cursor-pointer"
-                        readOnly
-                      />
-                      
-                      <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0">
-                        <ArrowUpRight size={18} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </section>
-
-          {/* Entity Agents Categories (Masonry Style with Images) - REMOVED per request */}
-          {/* <section className="mb-24"> ... </section> */}
-          </div>
         </div>
       </div>
 

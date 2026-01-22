@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { GitBranch } from 'lucide-react';
+import { GitBranch, RotateCcw } from 'lucide-react';
 import Layout from './components/Layout';
 import MobileWrapper from './components/MobileWrapper';
 import ProjectMindMap from './components/ProjectMindMap';
@@ -28,6 +28,21 @@ const RequireAuth = ({ children, isAuthenticated }) => {
 function App() {
   const [showMindMap, setShowMindMap] = useState(false);
   const [adoptedTrip, setAdoptedTrip] = useState(null);
+
+  // Load persisted trip on mount
+  useEffect(() => {
+     const savedTrip = localStorage.getItem('adoptedTrip');
+     if (savedTrip) {
+        setAdoptedTrip(JSON.parse(savedTrip));
+     }
+  }, []);
+
+  const handleAdoptTrip = (trip) => {
+    setAdoptedTrip(trip);
+    // Persist to local storage
+    localStorage.setItem('adoptedTrip', JSON.stringify(trip));
+  };
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleLogin = () => {
@@ -38,8 +53,25 @@ function App() {
     setIsAuthenticated(false);
   };
 
+  const handleReset = () => {
+    setIsAuthenticated(false);
+    setAdoptedTrip(null);
+    localStorage.removeItem('adoptedTrip');
+    window.location.href = '/'; // Force reload/navigate to home to clear everything cleanly
+  };
+
   return (
     <Router basename={import.meta.env.BASE_URL}>
+      {/* Global Reset State Button */}
+      <button 
+        onClick={handleReset}
+        className="fixed top-[calc(50%-60px)] right-[calc(50%-170px)] z-[9999] bg-red-500 text-white p-3 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center gap-2 font-bold pr-5 border-2 border-white/20 transform -translate-y-1/2 translate-x-[120%]"
+        title="重置状态"
+      >
+        <RotateCcw size={20} />
+        <span className="text-xs">重置状态</span>
+      </button>
+
       {/* Global Functional Mind Map Button */}
       <button 
         onClick={() => setShowMindMap(true)}
@@ -57,7 +89,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           
-          <Route element={<Layout onAdoptTrip={setAdoptedTrip} isAuthenticated={isAuthenticated} />}>
+          <Route element={<Layout onAdoptTrip={handleAdoptTrip} isAuthenticated={isAuthenticated} hasTrip={!!adoptedTrip} />}>
             <Route path="/" element={<Home adoptedTrip={adoptedTrip} isAuthenticated={isAuthenticated} />} />
             <Route path="/trip" element={
               <RequireAuth isAuthenticated={isAuthenticated}>
