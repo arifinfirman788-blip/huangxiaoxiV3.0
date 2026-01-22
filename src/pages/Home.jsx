@@ -216,7 +216,7 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
                    <div className="relative z-10 mt-4 pt-3 border-t border-slate-100 flex items-start gap-2.5">
                      <div className="bg-gradient-to-r from-orange-400 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1 shadow-sm">
                         <Sparkles size={10} /> 
-                        AI提醒
+                        黄小西提醒
                      </div>
                      <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
                        {getAiReminder(nextNode)}

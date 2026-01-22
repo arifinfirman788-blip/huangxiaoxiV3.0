@@ -21,21 +21,22 @@ const ChatPlanning = ({ onAdoptTrip }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [currentTrip, setCurrentTrip] = useState(null);
   const [activeAgent, setActiveAgent] = useState(null);
+  const [currentNode, setCurrentNode] = useState(null);
 
   // Helper to get agent info based on type
   const getAgentInfo = (type) => {
     switch (type) {
       case 'flight':
-        return { name: "民航运行中心·数据智能体", icon: Plane, color: "text-blue-800", bgColor: "bg-blue-100", iconColor: "text-blue-600", headerBg: "bg-blue-50", border: "border-blue-100", tag: "实时监控航路", btnBg: "bg-blue-600", description: "接入民航数据中心，提供实时航班动态与保障服务" };
+        return { name: "民航运行中心·交通智能体", icon: Plane, color: "text-blue-800", bgColor: "bg-blue-100", iconColor: "text-blue-600", headerBg: "bg-blue-50", border: "border-blue-100", tag: "实时监控航路", btnBg: "bg-blue-600", description: "接入民航数据中心，提供实时航班动态与保障服务" };
       case 'train':
       case 'transport':
         return { name: "交通出行服务·调度智能体", icon: Car, color: "text-green-800", bgColor: "bg-green-100", iconColor: "text-green-600", headerBg: "bg-green-50", border: "border-green-100", tag: "智能调度中", btnBg: "bg-green-600", description: "连接全网约车运力，提供最优出行方案" };
       case 'food':
-        return { name: "本地生活服务·美食智能体", icon: Utensils, color: "text-orange-800", bgColor: "bg-orange-100", iconColor: "text-orange-600", headerBg: "bg-orange-50", border: "border-orange-100", tag: "美味推荐", btnBg: "bg-orange-600", description: "汇集本地必吃榜单，提供排队预约服务" };
+        return { name: "本地生活服务·餐饮智能体", icon: Utensils, color: "text-orange-800", bgColor: "bg-orange-100", iconColor: "text-orange-600", headerBg: "bg-orange-50", border: "border-orange-100", tag: "美味推荐", btnBg: "bg-orange-600", description: "汇集本地必吃榜单，提供排队预约服务" };
       case 'scenic':
-        return { name: "景区智慧服务·导游智能体", icon: Camera, color: "text-purple-800", bgColor: "bg-purple-100", iconColor: "text-purple-600", headerBg: "bg-purple-50", border: "border-purple-100", tag: "景点导览", btnBg: "bg-purple-600", description: "景区官方授权接入，提供语音讲解与购票服务" };
+        return { name: "景区智慧服务·景区智能体", icon: Camera, color: "text-purple-800", bgColor: "bg-purple-100", iconColor: "text-purple-600", headerBg: "bg-purple-50", border: "border-purple-100", tag: "景点导览", btnBg: "bg-purple-600", description: "景区官方授权接入，提供语音讲解与购票服务" };
       case 'hotel':
-        return { name: "酒店住宿服务·管家智能体", icon: Hotel, color: "text-indigo-800", bgColor: "bg-indigo-100", iconColor: "text-indigo-600", headerBg: "bg-indigo-50", border: "border-indigo-100", tag: "贴心管家", btnBg: "bg-indigo-600", description: "酒店PMS直连，提供客房服务与入住办理" };
+        return { name: "酒店住宿服务·酒店智能体", icon: Hotel, color: "text-indigo-800", bgColor: "bg-indigo-100", iconColor: "text-indigo-600", headerBg: "bg-indigo-50", border: "border-indigo-100", tag: "贴心管家", btnBg: "bg-indigo-600", description: "酒店PMS直连，提供客房服务与入住办理" };
       default:
         return { name: "行程助手·智能体", icon: Info, color: "text-slate-800", bgColor: "bg-slate-100", iconColor: "text-slate-600", headerBg: "bg-slate-50", border: "border-slate-100", tag: "行程服务", btnBg: "bg-slate-800", description: "您的全能行程助手" };
     }
@@ -62,6 +63,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '航班抵达',
             type: 'flight',
             status: 'upcoming',
+            tips: "建议提前2小时到达机场，凭身份证办理值机。",
             details: {
               flightNo: 'CZ3685',
               dep: '北京大兴',
@@ -78,6 +80,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '早餐·糯米饭',
             type: 'food',
             status: 'upcoming',
+            tips: "这家店排队人较多，建议预留充足时间。",
             image: getPlaceholder(200, 200, 'Breakfast'),
             details: {
               name: '六广门毛阿姨糯米饭',
@@ -90,6 +93,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '文昌阁',
             type: 'scenic',
             status: 'upcoming',
+            tips: "阁楼内楼梯较陡，上下请注意安全。",
             image: getPlaceholder(400, 300, 'Attraction'),
             details: {
               name: '文昌阁',
@@ -102,6 +106,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '住宿·桔子水晶',
             type: 'hotel',
             status: 'upcoming',
+            tips: "酒店位于市中心，夜间休息请注意关好门窗。",
             image: getPlaceholder(400, 300, 'Hotel'),
             details: {
               name: '桔子水晶酒店',
@@ -125,6 +130,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '黔灵山公园',
             type: 'scenic',
             status: 'planned',
+            tips: "公园内猴子较多，请妥善保管食物和贵重物品。",
             image: getPlaceholder(400, 300, 'Park'),
             details: {
               name: '黔灵山公园',
@@ -137,6 +143,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '民生路集贸市场',
             type: 'food',
             status: 'planned',
+            tips: "地道小吃聚集地，建议尝试多种小吃。",
             image: getPlaceholder(200, 200, 'Market'),
             details: {
               name: '民生路集贸市场',
@@ -149,6 +156,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '筑城广场 & 甲秀楼',
             type: 'scenic',
             status: 'planned',
+            tips: "甲秀楼夜景很美，建议晚上去拍照。",
             image: getPlaceholder(200, 200, 'Landmark'),
             details: {
               name: '甲秀楼',
@@ -161,6 +169,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '青云集市',
             type: 'food',
             status: 'planned',
+            tips: "夜市人多拥挤，请注意保管财物。",
             image: getPlaceholder(200, 200, 'Night Market'),
             details: {
               name: '青云集市',
@@ -184,6 +193,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '花溪夜郎谷',
             type: 'scenic',
             status: 'planned',
+            tips: "石头城堡路面不平，请注意脚下安全。",
             image: getPlaceholder(200, 200, 'Valley'),
             details: {
               name: '花溪夜郎谷',
@@ -196,6 +206,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '青岩古镇',
             type: 'scenic',
             status: 'planned',
+            tips: "古镇石板路较多，建议穿着舒适的运动鞋。",
             image: getPlaceholder(200, 200, 'Ancient Town'),
             details: {
               name: '青岩古镇',
@@ -208,6 +219,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
             title: '离开贵阳',
             type: 'transport',
             status: 'planned',
+            tips: "请检查随身物品，避免遗漏在车上。",
             details: {
               name: '送机服务',
               desc: '前往机场'
@@ -238,6 +250,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
       ]);
     } else if (location.state?.nodeContext) {
       const node = location.state.nodeContext;
+      setCurrentNode(node);
       const agentInfo = getAgentInfo(node.type);
       // Ensure we have a valid trip structure even when entering from a node
       setCurrentTrip(defaultTrip); 
@@ -246,15 +259,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
         {
           id: 1,
           sender: 'agent',
-          text: `您好！我是黄小西。检测到您正在关注【${node.title || node.details?.name}】，需要为您接入${agentInfo.name}吗？`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        },
-        {
-          id: 2,
-          sender: 'agent',
-          type: 'service_card',
-          node: node,
-          agentInfo: agentInfo,
+          text: `请问您针对【${node.title || node.details?.name}】景区有什么问题，全都可以问小西哦`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -280,6 +285,32 @@ const ChatPlanning = ({ onAdoptTrip }) => {
     // Simulate AI response
     setTimeout(() => {
       setIsTyping(false);
+
+      if (inputText.includes('门票修改') && currentNode) {
+         const policyText = `【${currentNode.title || currentNode.details?.name}】门票修改政策：\n1. 提前24小时可免费修改；\n2. 当日修改需收取10%手续费；\n3. 已使用门票不可修改`;
+         
+         const policyMsg = {
+            id: Date.now() + 1,
+            sender: 'agent',
+            text: policyText,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+         };
+         setMessages(prev => [...prev, policyMsg]);
+
+         setTimeout(() => {
+             const agentInfo = getAgentInfo(currentNode.type);
+             const cardMsg = {
+               id: Date.now() + 2,
+               sender: 'agent',
+               type: 'service_card',
+               node: currentNode,
+               agentInfo: agentInfo,
+               time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+             };
+             setMessages(prev => [...prev, cardMsg]);
+         }, 1000);
+         return;
+      }
       
       let aiText = '';
       if (activeAgent) {
@@ -555,6 +586,19 @@ const ItineraryCard = ({ onAdopt, tripData }) => {
                      {item.image && (
                         <div className="mt-2 w-full h-32 rounded-lg overflow-hidden">
                            <img src={item.image} alt="" className="w-full h-full object-cover" />
+                        </div>
+                     )}
+                     
+                     {/* Yellow Xiaoxi Tips */}
+                     {item.tips && (
+                        <div className="mt-3 pt-3 border-t border-slate-200/50 flex gap-2 items-start">
+                           <div className="w-3.5 h-3.5 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
+                              <Sparkles size={8} className="text-orange-500" />
+                           </div>
+                           <div className="text-[10px] text-slate-500 leading-relaxed">
+                              <span className="font-bold text-orange-600">黄小西Tips：</span>
+                              {item.tips}
+                           </div>
                         </div>
                      )}
                   </div>

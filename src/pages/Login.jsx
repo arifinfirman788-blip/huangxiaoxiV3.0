@@ -41,14 +41,23 @@ const Login = ({ onLogin }) => {
     }, 1500);
   };
 
-  // Background Image (Simulating the architectural/scenic vibe)
-  const bgImage = "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"; // Cinque Terre or similar scenic
+  // Background Video
+  // const bgVideo = "/video/background.mp4"; // Local video file
+  const bgVideo = "/video/guizhou_seasons.mp4"; // Local video file
 
   return (
     <div className="h-full w-full relative bg-slate-900 overflow-hidden font-sans text-white">
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <img src={bgImage} alt="Background" className="w-full h-full object-cover opacity-80" />
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="w-full h-full object-cover opacity-80"
+        >
+          <source src={bgVideo} type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90" />
       </div>
 
@@ -66,14 +75,14 @@ const Login = ({ onLogin }) => {
                  <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center">
                     <span className="font-bold text-white">黄</span>
                  </div>
-                 <span className="text-xl font-bold tracking-wide">HuangXiaoxi</span>
+                 <span className="text-xl font-bold tracking-wide">多彩黄小西</span>
               </div>
               <h1 className="text-4xl font-light leading-tight mb-4">
-                Smart travel <br/>
-                solutions <span className="text-cyan-400 font-bold">for modern <br/> exploring</span>
+                游贵州，找小西 <br/>
+                <span className="text-cyan-400 font-bold">全程贴心陪伴 <br/> 你的全域向导</span>
               </h1>
               <p className="text-white/60 text-sm leading-relaxed max-w-[80%]">
-                Experience the beauty of Guizhou with your personal AI travel companion.
+                不管去哪儿，不管玩啥，有事儿您说话，黄小西一直都在。
               </p>
             </div>
 
@@ -81,7 +90,7 @@ const Login = ({ onLogin }) => {
               onClick={() => setStep('login')}
               className="group relative h-14 bg-white/10 backdrop-blur-md border border-white/20 rounded-full overflow-hidden flex items-center pr-2 pl-6"
             >
-              <span className="flex-1 text-left font-bold text-sm tracking-wide">Get Started</span>
+              <span className="flex-1 text-left font-bold text-sm tracking-wide">立即开启</span>
               <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center group-active:scale-95 transition-transform">
                 <ChevronRight size={20} className="text-white" />
               </div>

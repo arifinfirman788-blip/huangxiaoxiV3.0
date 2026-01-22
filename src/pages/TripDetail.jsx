@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Share, MoreHorizontal, Sun, Cloud, CloudRain, Info, Plane, Train, MapPin, ChevronRight, QrCode, AlertCircle, Clock, CheckCircle2, Utensils, Hotel, Camera, Coffee, Navigation, Phone, FileText, Headphones, Ticket, Car } from 'lucide-react';
+import { ArrowLeft, Share, MoreHorizontal, Sun, Cloud, CloudRain, Info, Plane, Train, MapPin, ChevronRight, QrCode, AlertCircle, Clock, CheckCircle2, Utensils, Hotel, Camera, Coffee, Navigation, Phone, FileText, Headphones, Ticket, Car, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPlaceholder } from '../utils/imageUtils';
 
@@ -13,16 +13,16 @@ const TripDetail = ({ adoptedTrip }) => {
   const getAgentInfo = (type) => {
     switch (type) {
       case 'flight':
-        return { name: "民航运行中心·数据智能体", icon: Plane, color: "text-blue-800", bgColor: "bg-blue-100", iconColor: "text-blue-600", headerBg: "bg-blue-50/50", border: "border-blue-50", tag: "实时监控航路", btnBg: "bg-blue-600", btnShadow: "shadow-blue-200" };
+        return { name: "民航运行中心·交通智能体", icon: Plane, color: "text-blue-800", bgColor: "bg-blue-100", iconColor: "text-blue-600", headerBg: "bg-blue-50/50", border: "border-blue-50", tag: "实时监控航路", btnBg: "bg-blue-600", btnShadow: "shadow-blue-200" };
       case 'train':
       case 'transport':
         return { name: "交通出行服务·调度智能体", icon: Car, color: "text-green-800", bgColor: "bg-green-100", iconColor: "text-green-600", headerBg: "bg-green-50/50", border: "border-green-50", tag: "智能调度中", btnBg: "bg-green-600", btnShadow: "shadow-green-200" };
       case 'food':
-        return { name: "本地生活服务·美食智能体", icon: Utensils, color: "text-orange-800", bgColor: "bg-orange-100", iconColor: "text-orange-600", headerBg: "bg-orange-50/50", border: "border-orange-50", tag: "美味推荐", btnBg: "bg-orange-600", btnShadow: "shadow-orange-200" };
+        return { name: "本地生活服务·餐饮智能体", icon: Utensils, color: "text-orange-800", bgColor: "bg-orange-100", iconColor: "text-orange-600", headerBg: "bg-orange-50/50", border: "border-orange-50", tag: "美味推荐", btnBg: "bg-orange-600", btnShadow: "shadow-orange-200" };
       case 'scenic':
-        return { name: "景区智慧服务·导游智能体", icon: Camera, color: "text-purple-800", bgColor: "bg-purple-100", iconColor: "text-purple-600", headerBg: "bg-purple-50/50", border: "border-purple-50", tag: "景点导览", btnBg: "bg-purple-600", btnShadow: "shadow-purple-200" };
+        return { name: "景区智慧服务·景区智能体", icon: Camera, color: "text-purple-800", bgColor: "bg-purple-100", iconColor: "text-purple-600", headerBg: "bg-purple-50/50", border: "border-purple-50", tag: "景点导览", btnBg: "bg-purple-600", btnShadow: "shadow-purple-200" };
       case 'hotel':
-        return { name: "酒店住宿服务·管家智能体", icon: Hotel, color: "text-indigo-800", bgColor: "bg-indigo-100", iconColor: "text-indigo-600", headerBg: "bg-indigo-50/50", border: "border-indigo-50", tag: "贴心管家", btnBg: "bg-indigo-600", btnShadow: "shadow-indigo-200" };
+        return { name: "酒店住宿服务·酒店智能体", icon: Hotel, color: "text-indigo-800", bgColor: "bg-indigo-100", iconColor: "text-indigo-600", headerBg: "bg-indigo-50/50", border: "border-indigo-50", tag: "贴心管家", btnBg: "bg-indigo-600", btnShadow: "shadow-indigo-200" };
       default:
         return { name: "行程助手·智能体", icon: Info, color: "text-slate-800", bgColor: "bg-slate-100", iconColor: "text-slate-600", headerBg: "bg-slate-50/50", border: "border-slate-50", tag: "行程服务", btnBg: "bg-slate-800", btnShadow: "shadow-slate-200" };
     }
@@ -83,6 +83,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "航班抵达",
             type: "flight",
             status: "arrived",
+            tips: "建议提前2小时到达机场，凭身份证办理值机。",
             details: {
               flightNo: "CZ3685",
               dep: "北京大兴",
@@ -98,6 +99,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "早餐·糯米饭",
             type: "food",
             status: "upcoming",
+            tips: "这家店排队人较多，建议预留充足时间。",
             image: getPlaceholder(400, 300, 'Breakfast'),
             details: {
               name: "六广门毛阿姨糯米饭",
@@ -109,6 +111,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "文昌阁",
             type: "scenic",
             status: "upcoming",
+            tips: "阁楼内楼梯较陡，上下请注意安全。",
             image: getPlaceholder(400, 300, 'Attraction'),
             details: {
               name: "明代古建筑",
@@ -120,6 +123,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "住宿·桔子水晶",
             type: "hotel",
             status: "upcoming",
+            tips: "酒店位于市中心，夜间休息请注意关好门窗。",
             image: getPlaceholder(400, 300, 'Hotel'),
             details: {
               name: "桔子水晶酒店",
@@ -141,6 +145,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "黔灵山公园",
             type: "scenic",
             status: "planned",
+            tips: "公园内猴子较多，请妥善保管食物和贵重物品。",
             image: getPlaceholder(400, 300, 'Park'),
             details: {
               name: "黔南第一山",
@@ -152,6 +157,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "午餐·丝娃娃",
             type: "food",
             status: "planned",
+            tips: "建议搭配酸汤食用，口感更佳。",
             image: getPlaceholder(400, 300, 'Lunch'),
             details: {
               name: "丝恋红汤丝娃娃",
@@ -163,6 +169,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "贵州省博物馆",
             type: "scenic",
             status: "planned",
+            tips: "馆内禁止使用闪光灯，请文明观展。",
             image: getPlaceholder(400, 300, 'Museum'),
             details: {
               name: "了解贵州历史",
@@ -184,6 +191,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "青岩古镇",
             type: "scenic",
             status: "planned",
+            tips: "古镇石板路较多，建议穿着舒适的运动鞋。",
             image: getPlaceholder(400, 300, 'Ancient Town'),
             details: {
               name: "四大古镇之一",
@@ -195,6 +203,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "午餐·状元蹄",
             type: "food",
             status: "planned",
+            tips: "猪蹄软糯，建议趁热食用。",
             image: getPlaceholder(400, 300, 'Food'),
             details: {
               name: "金必轩",
@@ -206,6 +215,7 @@ const TripDetail = ({ adoptedTrip }) => {
             title: "前往机场",
             type: "transport",
             status: "planned",
+            tips: "请检查随身物品，避免遗漏在车上。",
             image: null,
             details: {
               name: "送机服务",
@@ -436,6 +446,19 @@ const TripDetail = ({ adoptedTrip }) => {
                                           </div>
                                         </div>
                                       </div>
+                                    )}
+
+                                    {/* Yellow Xiaoxi Tips */}
+                                    {node.tips && (
+                                       <div className="mt-4 bg-orange-50/50 border border-orange-100 rounded-xl p-3 flex gap-2.5 items-start">
+                                          <div className="w-4 h-4 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
+                                             <Sparkles size={10} className="text-orange-500" />
+                                          </div>
+                                          <div className="flex-1">
+                                             <div className="text-[10px] font-bold text-orange-600 mb-0.5">黄小西Tips</div>
+                                             <div className="text-[10px] text-slate-500 leading-relaxed">{node.tips}</div>
+                                          </div>
+                                       </div>
                                     )}
                                  </div>
 
