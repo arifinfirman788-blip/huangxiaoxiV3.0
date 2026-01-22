@@ -154,16 +154,16 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
               <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight leading-tight">你好, <br/>旅行者</h1>
             </div>
             <div className="flex items-center gap-3">
-              {/* <button className="w-10 h-10 bg-white rounded-blob-2 shadow-sm border border-white/60 flex items-center justify-center text-slate-500 hover:text-cyan-600 transition-colors">
+              <button className="w-10 h-10 bg-white rounded-blob-2 shadow-sm border border-white/60 flex items-center justify-center text-slate-500 hover:text-cyan-600 transition-colors">
                  <Languages size={20} />
-              </button> */}
-              {/* <button 
+              </button>
+              <button 
                 onClick={() => handleNav('/message')}
                 className="w-10 h-10 bg-white rounded-blob-2 shadow-sm border border-white/60 flex items-center justify-center overflow-hidden active:scale-95 transition-transform"
               >
                 <MessageCircle size={20} className="text-slate-700" />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white" />
-              </button> */}
+              </button>
             </div>
           </header>
 
@@ -244,14 +244,14 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
           </div>
 
           {/* Smart Notification Area (Moved) */}
-          {/* <motion.div
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={() => adoptedTrip && handleNav(`/trip/${adoptedTrip.id}`)}
             className="w-full bg-white/80 backdrop-blur-xl rounded-[1.5rem] p-4 mb-8 border border-white shadow-lg shadow-slate-200/50 min-h-[90px] flex flex-col justify-center relative overflow-hidden group cursor-pointer active:scale-98 transition-all"
-          > */}
+          >
             {/* Decorative gradient blob */}
-            {/* <div className="absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-br from-cyan-100/50 to-blue-100/50 blur-2xl rounded-full opacity-60 pointer-events-none" />
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-br from-cyan-100/50 to-blue-100/50 blur-2xl rounded-full opacity-60 pointer-events-none" />
 
             {adoptedTrip ? (() => {
                // Flatten all timeline nodes from all days
@@ -261,9 +261,9 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
                
                return (
                  <>
-                   <div className="relative z-10 w-full flex items-center gap-3"> */}
+                   <div className="relative z-10 w-full flex items-center gap-3">
                      {/* Left: Integrated AI Reminder */}
-                     {/* <div className="w-24 bg-orange-50/50 rounded-xl p-2 border border-orange-100/50 flex flex-col justify-center gap-1 shrink-0 h-full">
+                     <div className="w-24 bg-orange-50/50 rounded-xl p-2 border border-orange-100/50 flex flex-col justify-center gap-1 shrink-0 h-full">
                         <div className="flex items-center gap-1 text-orange-600">
                            <Sparkles size={10} className="shrink-0" />
                            <span className="text-[10px] font-bold">黄小西</span>
@@ -271,10 +271,10 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
                         <p className="text-[9px] text-slate-500 leading-tight line-clamp-2">
                           {getAiReminder(nextNode)}
                         </p>
-                     </div> */}
+                     </div>
 
                      {/* Right: Info */}
-                     {/* <div className="flex-1 min-w-0">
+                     <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-center mb-0.5">
                           <h3 className="text-sm font-bold text-slate-800 line-clamp-1">{nextNode?.title}</h3>
                           <span className="text-[10px] font-bold text-cyan-600 bg-cyan-50/80 px-1.5 py-0.5 rounded-full border border-cyan-100/50 shadow-sm shrink-0">
@@ -305,10 +305,10 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
                      为你推荐
                    </h3>
                    <span className="text-[10px] text-slate-400">基于您的偏好</span>
-                </div> */}
+                </div>
                 
                 {/* Proactive Service Cards - Horizontal Scroll */}
-                {/* <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-5 px-5 pb-2">
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-5 px-5 pb-2">
                    {[
                      { 
                        title: "黄果树专属导游", 
@@ -364,7 +364,7 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
                 </div>
               </div>
             )}
-          </motion.div> */}
+          </motion.div>
         </div>
       </div>
 

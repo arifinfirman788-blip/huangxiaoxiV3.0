@@ -14,6 +14,7 @@ import AgentCategoryList from './pages/AgentCategoryList';
 import News from './pages/News';
 import ChatPlanning from './pages/ChatPlanning';
 import TripDetail from './pages/TripDetail';
+import TripCompare from './pages/TripCompare';
 import Login from './pages/Login';
 
 // Auth Guard Component
@@ -122,6 +123,11 @@ function App() {
           <Route path="/trip/:id" element={
             <RequireAuth isAuthenticated={isAuthenticated}>
               <TripDetail adoptedTrip={adoptedTrip} />
+            </RequireAuth>
+          } />
+          <Route path="/trip/compare" element={
+            <RequireAuth isAuthenticated={isAuthenticated}>
+              <TripCompare />
             </RequireAuth>
           } />
         </Routes>

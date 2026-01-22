@@ -122,7 +122,7 @@ const BottomNav = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
           />
           
           {/* Central Plus Button */}
-          {/* <div className="relative -top-5 z-20">
+          <div className="relative -top-5 z-20">
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={toggleMenu}
@@ -135,7 +135,7 @@ const BottomNav = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
                 <Plus size={28} strokeWidth={2.5} />
               </motion.div>
             </motion.button>
-          </div> */}
+          </div>
 
           <NavIcon 
             icon={ShoppingBag} 

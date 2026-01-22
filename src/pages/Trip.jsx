@@ -1,14 +1,40 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, ChevronRight, Users, Clock, ArrowUpRight } from 'lucide-react';
+import { Calendar, MapPin, ChevronRight, Users, Clock, ArrowUpRight, Scale, CheckCircle2, Circle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getPlaceholder } from '../utils/imageUtils';
 
 const Trip = ({ adoptedTrip }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
+  const [isCompareMode, setIsCompareMode] = useState(false);
+  const [selectedTrips, setSelectedTrips] = useState([]);
 
-  const myTrips = adoptedTrip ? [adoptedTrip] : [];
+  // Mock Data for Demo Purposes if adoptedTrip is the only one
+  const mockHistoryTrips = [
+    {
+      id: 'mock-1',
+      title: '黔东南苗寨深度体验3日游',
+      date: '04/15 - 04/17',
+      days: 3,
+      distance: '320km',
+      rating: '9.6',
+      image: getPlaceholder(400, 300, 'Miao Village Trip'),
+      status: 'completed'
+    },
+    {
+      id: 'mock-2',
+      title: '遵义红色记忆之旅2日游',
+      date: '03/10 - 03/11',
+      days: 2,
+      distance: '180km',
+      rating: '9.5',
+      image: getPlaceholder(400, 300, 'Zunyi Trip'),
+      status: 'completed'
+    }
+  ];
+
+  const myTrips = adoptedTrip ? [adoptedTrip, ...mockHistoryTrips] : [...mockHistoryTrips];
 
   // Dynamically generate tabs based on trips
   const uniqueDates = [...new Set(myTrips.map(trip => trip.date))];
@@ -24,16 +50,33 @@ const Trip = ({ adoptedTrip }) => {
         return selectedTab && t.date === selectedTab.label;
     });
 
+  const toggleTripSelection = (tripId) => {
+    if (selectedTrips.includes(tripId)) {
+      setSelectedTrips(selectedTrips.filter(id => id !== tripId));
+    } else {
+      if (selectedTrips.length >= 3) {
+        // Optional: Alert max 3
+        return;
+      }
+      setSelectedTrips([...selectedTrips, tripId]);
+    }
+  };
+
+  const handleStartCompare = () => {
+    const tripsToCompare = myTrips.filter(t => selectedTrips.includes(t.id));
+    navigate('/trip/compare', { state: { trips: tripsToCompare } });
+  };
+
   return (
-    <div className="h-full w-full overflow-y-auto scrollbar-hide pb-24 px-6 pt-12">
+    <div className="h-full w-full overflow-y-auto scrollbar-hide pb-24 px-6 pt-12 relative">
       {/* Header */}
-      <header className="mb-8">
+      <header className="mb-6">
         <h1 className="text-3xl font-black text-slate-800 tracking-tighter leading-tight">精选线路</h1>
         <p className="text-sm text-slate-500 font-medium mt-1 tracking-wide">EXPLORE GUIZHOU</p>
       </header>
 
-      {/* Featured Routes (Horizontal Scroll) */}
-      <div className="overflow-x-auto scrollbar-hide -mx-6 px-6 mb-10 flex gap-4">
+      {/* Featured Routes (Horizontal Scroll) - Shrunk */}
+      <div className="overflow-x-auto scrollbar-hide -mx-6 px-6 mb-8 flex gap-3">
         <HorizontalTripCard 
           country="中国·贵州"
           title="黄果树瀑布深度游"
@@ -56,28 +99,50 @@ const Trip = ({ adoptedTrip }) => {
 
       {/* My Trips Section */}
       <section>
-        <div className="flex flex-col gap-4 mb-6">
-          <h2 className="text-xl font-bold text-slate-800 whitespace-nowrap mr-4">我的行程</h2>
-          {/* Date Tabs */}
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide w-full pb-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab.id ? 'bg-[#052216] text-white shadow-lg scale-105' : 'bg-white text-slate-800 border border-slate-100'}`}
-              >
-                <Calendar size={16} className={activeTab === tab.id ? 'opacity-100' : 'opacity-40'} />
-                {tab.label}
-              </button>
-            ))}
+        <div className="flex flex-col gap-4 mb-4">
+          <div className="flex justify-between items-center mr-2">
+            <h2 className="text-xl font-bold text-slate-800 whitespace-nowrap">我的行程</h2>
+            
+            <button 
+              onClick={() => {
+                setIsCompareMode(!isCompareMode);
+                setSelectedTrips([]);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${isCompareMode ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'}`}
+            >
+              {isCompareMode ? <X size={14} /> : <Scale size={14} />}
+              {isCompareMode ? '取消对比' : '行程对比'}
+            </button>
           </div>
+
+          {/* Date Tabs (Hide in compare mode to simplify) */}
+          {!isCompareMode && (
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide w-full pb-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-shrink-0 px-5 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab.id ? 'bg-[#052216] text-white shadow-lg scale-105' : 'bg-white text-slate-800 border border-slate-100'}`}
+                >
+                  <Calendar size={16} className={activeTab === tab.id ? 'opacity-100' : 'opacity-40'} />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Trip List */}
-        <div className="space-y-6">
+        <div className="space-y-6 pb-20">
           <AnimatePresence mode="popLayout">
             {filteredTrips.map((trip) => (
-              <TripCard key={trip.id} trip={trip} />
+              <TripCard 
+                key={trip.id} 
+                trip={trip} 
+                isCompareMode={isCompareMode}
+                isSelected={selectedTrips.includes(trip.id)}
+                onSelect={() => toggleTripSelection(trip.id)}
+              />
             ))}
           </AnimatePresence>
           {filteredTrips.length === 0 && (
@@ -88,64 +153,92 @@ const Trip = ({ adoptedTrip }) => {
           )}
         </div>
       </section>
+
+      {/* Floating Action Button for Compare */}
+      <AnimatePresence>
+        {isCompareMode && selectedTrips.length >= 2 && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="absolute bottom-24 left-6 right-6 z-50"
+          >
+            <button 
+              onClick={handleStartCompare}
+              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg shadow-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            >
+              <Scale size={20} className="text-yellow-400" />
+              开始对比 ({selectedTrips.length})
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
 const HorizontalTripCard = ({ country, title, date, users, extraUsers, bgImage, icon }) => (
-  <div className="flex-shrink-0 w-[85%] h-64 rounded-[2.5rem] p-6 text-white relative overflow-hidden group">
+  // Shrunk dimensions: w-[70%] h-48 (was w-[85%] h-64)
+  <div className="flex-shrink-0 w-[70%] h-48 rounded-[2rem] p-5 text-white relative overflow-hidden group">
     {/* Background Image */}
     <div className="absolute inset-0">
       <img src={bgImage} alt={title} className="w-full h-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
     </div>
 
-    <div className="absolute top-0 right-0 p-6 z-10">
-       <button className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10">
-         <ArrowUpRight size={16} />
+    <div className="absolute top-0 right-0 p-4 z-10">
+       <button className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/10">
+         <ArrowUpRight size={12} />
        </button>
     </div>
 
     <div className="relative z-10 h-full flex flex-col justify-between">
-      <div className="pt-2">
-        <div className="flex items-center gap-2 mb-2">
-           <div className="w-4 h-3 bg-cyan-500 rounded-sm" /> 
-           <span className="text-[10px] font-bold tracking-widest uppercase opacity-90 text-shadow">{country}</span>
+      <div className="pt-1">
+        <div className="flex items-center gap-1.5 mb-1.5">
+           <div className="w-3 h-2 bg-cyan-500 rounded-sm" /> 
+           <span className="text-[9px] font-bold tracking-widest uppercase opacity-90 text-shadow">{country}</span>
         </div>
-        <h3 className="text-2xl font-bold leading-tight mb-2 text-shadow-sm">{title}</h3>
-        <div className="flex items-center gap-2 text-xs opacity-80 font-medium">
-          <Calendar size={12} />
+        <h3 className="text-lg font-bold leading-tight mb-1.5 text-shadow-sm line-clamp-2">{title}</h3>
+        <div className="flex items-center gap-1.5 text-[10px] opacity-80 font-medium">
+          <Calendar size={10} />
           <span>{date}</span>
         </div>
       </div>
 
       <div className="flex justify-between items-center">
-        <div className="flex -space-x-3">
+        <div className="flex -space-x-2">
           {users.map((u, i) => (
-            <img key={i} src={u} alt="User" className="w-8 h-8 rounded-full border-2 border-slate-900 object-cover" />
+            <img key={i} src={u} alt="User" className="w-6 h-6 rounded-full border border-slate-900 object-cover" />
           ))}
-          <div className="w-8 h-8 rounded-full bg-cyan-500 border-2 border-slate-900 flex items-center justify-center text-white text-[10px] font-bold">
+          <div className="w-6 h-6 rounded-full bg-cyan-500 border border-slate-900 flex items-center justify-center text-white text-[8px] font-bold">
             +{extraUsers}
           </div>
         </div>
-        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
-          <span className="text-xl">{icon}</span>
+        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
+          <span className="text-base">{icon}</span>
         </div>
       </div>
     </div>
   </div>
 );
 
-const TripCard = ({ trip }) => {
+const TripCard = ({ trip, isCompareMode, isSelected, onSelect }) => {
   const navigate = useNavigate();
+  
   return (
   <motion.div 
     layout
     initial={{ y: 20, opacity: 0 }}
     animate={{ y: 0, opacity: 1 }}
     exit={{ y: -20, opacity: 0 }}
-    onClick={() => navigate(`/trip/${trip.id}`)}
-    className="w-full h-[320px] rounded-[2rem] relative overflow-hidden group cursor-pointer shadow-sm"
+    onClick={() => {
+      if (isCompareMode) {
+        onSelect();
+      } else {
+        navigate(`/trip/${trip.id}`);
+      }
+    }}
+    className={`w-full h-[280px] rounded-[2rem] relative overflow-hidden group cursor-pointer shadow-sm transition-all ${isCompareMode && isSelected ? 'ring-4 ring-cyan-500 scale-[0.98]' : ''}`}
   >
     <img 
       src={trip.image} 
@@ -155,21 +248,30 @@ const TripCard = ({ trip }) => {
     />
     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
     
-    <div className="absolute top-5 left-5">
+    <div className="absolute top-5 left-5 z-20 flex items-center gap-2">
        <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10">
-         {trip.status === 'upcoming' ? '即将开始' : '计划中'}
+         {trip.status === 'upcoming' ? '即将开始' : trip.status === 'completed' ? '已完成' : '计划中'}
        </span>
     </div>
 
+    {/* Selection Overlay */}
+    {isCompareMode && (
+      <div className="absolute top-5 right-5 z-30">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isSelected ? 'bg-cyan-500 text-white shadow-lg' : 'bg-white/30 backdrop-blur-md border border-white/50'}`}>
+          {isSelected ? <CheckCircle2 size={18} /> : <Circle size={18} className="text-white" />}
+        </div>
+      </div>
+    )}
+
     <div className="absolute bottom-0 left-0 right-0 p-6">
       <div className="mb-4">
-        <h3 className="text-white text-2xl font-bold leading-tight mb-1">
+        <h3 className="text-white text-xl font-bold leading-tight mb-1 line-clamp-2">
           {trip.title}
         </h3>
         <p className="text-white/60 text-xs font-medium">{trip.date}</p>
       </div>
       
-      <div className="flex items-center gap-4 text-white/80 text-xs font-medium">
+      <div className="flex items-center gap-3 text-white/80 text-xs font-medium">
          <div className="flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
            <Clock size={12} />
            <span>{trip.days}天</span>
