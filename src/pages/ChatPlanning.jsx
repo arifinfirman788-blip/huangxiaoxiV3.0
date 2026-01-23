@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, Mic, MapPin, Calendar, Clock, Plane, Bed, Utensils, Flag, Sparkles, Check, ChevronDown, ChevronUp, Star, Info, Car, Camera, Hotel, Headphones, Ticket, Phone, Coffee, FileText, Navigation, Loader2 } from 'lucide-react';
+import { ArrowLeft, Send, Mic, MapPin, Calendar, Clock, Plane, Bed, Utensils, Flag, Sparkles, Check, ChevronDown, ChevronUp, Star, Info, Car, Camera, Hotel, Headphones, Ticket, Phone, Coffee, FileText, Navigation, Loader2, Wand2, RefreshCcw, ArrowRight } from 'lucide-react';
 import TuoSaiImage from '../image/托腮_1.png';
 import { getPlaceholder } from '../utils/imageUtils';
 
@@ -9,6 +9,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollRef = useRef(null);
+  const hasGeneratedPlan = useRef(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -22,6 +23,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
   const [currentTrip, setCurrentTrip] = useState(null);
   const [activeAgent, setActiveAgent] = useState(null);
   const [currentNode, setCurrentNode] = useState(null);
+  const [planningContext, setPlanningContext] = useState(null); // For AI Planning flow
 
   // Helper to get agent info based on type
   const getAgentInfo = (type) => {
@@ -231,6 +233,7 @@ const ChatPlanning = ({ onAdoptTrip }) => {
   };
 
   useEffect(() => {
+    let timer;
     if (location.state?.importedData) {
       const imported = location.state.importedData;
       setCurrentTrip(imported);
@@ -263,9 +266,56 @@ const ChatPlanning = ({ onAdoptTrip }) => {
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
+    } else if (location.state?.mode === 'day_planning') {
+        const { startPoint, endPoint, dayIndex, currentItinerary } = location.state;
+        setPlanningContext(location.state);
+        setCurrentTrip({ ...defaultTrip, itinerary: currentItinerary }); // Sync current itinerary
+        
+        // Initial messages for AI Planning
+        setMessages([
+            {
+                id: 1,
+                sender: 'user',
+                text: `我计划今天从【${startPoint}】出发，前往【${endPoint}】，请帮我规划一下今天的行程。`,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            },
+            {
+                id: 2,
+                sender: 'agent',
+                text: `收到！正在结合您前几天的行程，为您规划从 ${startPoint} 到 ${endPoint} 的最佳路线...`,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }
+        ]);
+
+        // Simulate AI generating plan
+             setIsTyping(true);
+             timer = setTimeout(() => {
+                 setIsTyping(false);
+            const planMsg = {
+                id: 3,
+                sender: 'agent',
+                type: 'day_plan_card',
+                plan: {
+                    day: dayIndex + 1,
+                    start: startPoint,
+                    end: endPoint,
+                    spots: [
+                        { time: '09:00', title: startPoint, type: 'hotel', desc: '出发' },
+                        { time: '10:30', title: '黔灵山公园', type: 'scenic', desc: '观赏野生猕猴，游览弘福寺', tag: '推荐' },
+                        { time: '12:30', title: '民生路美食街', type: 'food', desc: '品尝贵阳地道小吃', tag: '必吃' },
+                        { time: '14:30', title: '甲秀楼', type: 'scenic', desc: '贵阳地标，拍照打卡', tag: '地标' },
+                        { time: '16:00', title: endPoint, type: 'transport', desc: '抵达目的地' }
+                    ]
+                },
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            setMessages(prev => [...prev, planMsg]);
+        }, 2000);
+
     } else {
       setCurrentTrip(defaultTrip);
     }
+    return () => clearTimeout(timer);
   }, [location.state]);
 
   const handleSend = () => {
@@ -429,6 +479,82 @@ const ChatPlanning = ({ onAdoptTrip }) => {
                           setActiveAgent(msg.agentInfo);
                         }, 1500);
                      }} 
+                   />
+                </div>
+              ) : msg.type === 'day_plan_card' ? (
+                <div className="w-full min-w-[300px]">
+                   <DayPlanCard 
+                     plan={msg.plan}
+                     onConfirm={() => {
+                        // 1. Update Trip Data
+                        if (planningContext && currentTrip) {
+                           const { dayIndex } = planningContext;
+                           const newSpots = msg.plan.spots;
+                           
+                           // Convert spots to timeline items
+                           const newTimeline = newSpots.map((spot, idx) => ({
+                               id: `ai-${Date.now()}-${idx}`,
+                               time: spot.time,
+                               title: spot.title,
+                               type: spot.type,
+                               status: 'planned',
+                               tips: spot.desc,
+                               details: {
+                                   name: spot.title,
+                                   desc: spot.desc
+                               },
+                               image: getPlaceholder(200, 200, spot.type)
+                           }));
+                           
+                           const updatedItinerary = [...currentTrip.itinerary];
+                           if (updatedItinerary[dayIndex]) {
+                               updatedItinerary[dayIndex] = {
+                                   ...updatedItinerary[dayIndex],
+                                   timeline: newTimeline,
+                                   highlights: newSpots.map(s => s.title).join(' — ')
+                               };
+                               
+                               const updatedTrip = { ...currentTrip, itinerary: updatedItinerary };
+                               
+                               // 2. Persist
+                               if (onAdoptTrip) {
+                                   onAdoptTrip(updatedTrip);
+                               }
+                           }
+                        }
+
+                        const confirmMsg = {
+                            id: Date.now(),
+                            sender: 'agent',
+                            text: '已成功将该方案加入您的行程！',
+                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        };
+                        setMessages(prev => [...prev, confirmMsg]);
+                        // Navigate back after short delay
+                        setTimeout(() => navigate(-1), 800);
+                     }}
+                     onRegenerate={() => {
+                        const regenMsg = {
+                            id: Date.now(),
+                            sender: 'user',
+                            text: '我对这个方案不太满意，请重新规划。',
+                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        };
+                        setMessages(prev => [...prev, regenMsg]);
+                        setIsTyping(true);
+                        // Simulate regenerate
+                        setTimeout(() => {
+                            setIsTyping(false);
+                            const newPlanMsg = {
+                                id: Date.now() + 1,
+                                sender: 'agent',
+                                type: 'day_plan_card',
+                                plan: { ...msg.plan, spots: [...msg.plan.spots].reverse() }, // Mock change
+                                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            };
+                            setMessages(prev => [...prev, newPlanMsg]);
+                        }, 1500);
+                     }}
                    />
                 </div>
               ) : (
@@ -772,6 +898,75 @@ const ServiceAgentCard = ({ node, agentInfo, onConnect }) => {
              </>
            )}
          </button>
+       </div>
+    </div>
+  );
+};
+
+const DayPlanCard = ({ plan, onConfirm, onRegenerate }) => {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-purple-100">
+       <div className="bg-purple-50/50 p-4 border-b border-purple-100 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+             <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                <Wand2 size={16} className="text-purple-600" />
+             </div>
+             <div>
+                <h3 className="font-bold text-sm text-slate-800">AI 推荐行程</h3>
+                <p className="text-[10px] text-purple-600 font-bold">基于起点终点智能生成</p>
+             </div>
+          </div>
+       </div>
+       
+       <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-2 rounded-lg">
+             <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="font-bold">{plan.start}</span>
+             </div>
+             <ArrowRight size={14} className="text-slate-300" />
+             <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span className="font-bold">{plan.end}</span>
+             </div>
+          </div>
+
+          <div className="space-y-3 relative pl-2">
+             <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-slate-100" />
+             {plan.spots.map((spot, i) => (
+                <div key={i} className="flex gap-3 relative">
+                   <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 z-10 border-2 border-white ${
+                      i === 0 ? 'bg-green-500 text-white' : 
+                      i === plan.spots.length - 1 ? 'bg-red-500 text-white' : 
+                      'bg-purple-100 text-purple-500'
+                   }`}>
+                      {i === 0 || i === plan.spots.length - 1 ? <div className="w-1.5 h-1.5 bg-white rounded-full" /> : <span className="text-[10px] font-bold">{i + 1}</span>}
+                   </div>
+                   <div className="flex-1 min-w-0 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                      <div className="flex justify-between items-start mb-1">
+                         <h4 className="font-bold text-xs text-slate-800">{spot.title}</h4>
+                         <span className="text-[10px] font-mono text-slate-400">{spot.time}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 truncate">{spot.desc}</p>
+                   </div>
+                </div>
+             ))}
+          </div>
+
+          <div className="flex gap-3 pt-2">
+             <button 
+               onClick={onRegenerate}
+               className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-slate-50"
+             >
+                <RefreshCcw size={14} /> 重新规划
+             </button>
+             <button 
+               onClick={onConfirm}
+               className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-slate-800 shadow-lg shadow-slate-200"
+             >
+                <Check size={14} /> 加入原行程
+             </button>
+          </div>
        </div>
     </div>
   );

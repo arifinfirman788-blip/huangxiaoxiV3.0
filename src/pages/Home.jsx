@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, User, ChevronDown, MessageCircle, Star, Coffee, Building, Landmark, Mic, Plus, Home as HomeIcon, Compass, UserCircle, X, Check, Bell, Languages, Volume2, ArrowUpRight, Plane, Clock, Sparkles, Camera, Car } from 'lucide-react';
+import { Search, MapPin, User, ChevronDown, MessageCircle, Star, Coffee, Building, Landmark, Mic, Plus, Home as HomeIcon, Compass, UserCircle, X, Check, Bell, Languages, Volume2, ArrowUpRight, Plane, Clock, Sparkles, Camera, Car, Play, Calendar as CalendarIcon } from 'lucide-react';
 import { categories } from '../data/agents';
 import TuoSaiImage from '../image/托腮_1.png';
+import FlipCountdown from '../components/FlipCountdown';
 
 const iconMap = {
   Landmark: Landmark,
@@ -128,9 +129,11 @@ const NewsMarquee = () => {
   );
 };
 
-const Home = ({ adoptedTrip, isAuthenticated }) => {
+const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
   const [activeRole, setActiveRole] = useState('黄小西');
   const [showRoleSelector, setShowRoleSelector] = useState(false);
+  const [isStartModalOpen, setIsStartModalOpen] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState('');
   const navigate = useNavigate();
 
   // Navigation wrapper to check auth
@@ -140,6 +143,17 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
     } else {
       navigate(path);
     }
+  };
+
+  const handleStartTrip = () => {
+    if (!tempStartDate) return;
+    const date = new Date(tempStartDate);
+    if (date <= new Date()) {
+        alert("请选择当前时间之后的时间");
+        return;
+    }
+    onUpdateTrip({ startTime: date.toISOString() });
+    setIsStartModalOpen(false);
   };
 
   const roles = ['黄小西', '酒店助手', '景区向导', '美食专家', '政务助手'];
@@ -247,20 +261,67 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            onClick={() => adoptedTrip && handleNav(`/trip/${adoptedTrip.id}`)}
-            className="w-full bg-white/80 backdrop-blur-xl rounded-[1.5rem] p-4 mb-8 border border-white shadow-lg shadow-slate-200/50 min-h-[90px] flex flex-col justify-center relative overflow-hidden group cursor-pointer active:scale-98 transition-all"
+            className="w-full bg-white/80 backdrop-blur-xl rounded-[1.5rem] p-4 mb-8 border border-white shadow-lg shadow-slate-200/50 min-h-[90px] flex flex-col justify-center relative overflow-hidden group transition-all"
           >
             {/* Decorative gradient blob */}
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-br from-cyan-100/50 to-blue-100/50 blur-2xl rounded-full opacity-60 pointer-events-none" />
 
             {adoptedTrip ? (() => {
+               // 1. If trip has no start time, show Start Button
+               if (!adoptedTrip.startTime) {
+                 return (
+                   <div className="flex items-center justify-between w-full relative z-10">
+                     <div className="flex items-center gap-3">
+                       <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600">
+                         <Play size={24} fill="currentColor" />
+                       </div>
+                       <div>
+                         <h3 className="font-bold text-slate-800">行程已就绪</h3>
+                         <p className="text-xs text-slate-500">点击右侧按钮开启您的旅程</p>
+                       </div>
+                     </div>
+                     <button 
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         setIsStartModalOpen(true);
+                       }}
+                       className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-cyan-200 active:scale-95 transition-transform"
+                     >
+                       开始行程
+                     </button>
+                   </div>
+                 );
+               }
+
+               // 2. If trip has start time, check if it's in the future
+               const startTime = new Date(adoptedTrip.startTime);
+               const now = new Date();
+               
+               if (startTime > now) {
+                 return (
+                   <div className="w-full relative z-10">
+                     <div className="flex justify-between items-center mb-3">
+                       <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                         <Clock size={14} className="text-cyan-500" />
+                         距离行程开始还有
+                       </h3>
+                       <span className="text-[10px] text-slate-400">
+                         {startTime.toLocaleDateString()} {startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                       </span>
+                     </div>
+                     <FlipCountdown targetDate={startTime} />
+                   </div>
+                 );
+               }
+
+               // 3. If trip has started, show Next Node (Existing Logic)
                // Flatten all timeline nodes from all days
                const allNodes = adoptedTrip.itinerary?.flatMap(day => day.timeline) || [];
                // Find next upcoming node
                const nextNode = allNodes.find(n => n.status === 'upcoming' || n.status === 'planned') || allNodes[0];
                
                return (
-                 <>
+                 <div onClick={() => handleNav(`/trip/${adoptedTrip.id}`)} className="cursor-pointer">
                    <div className="relative z-10 w-full flex items-center gap-3">
                      {/* Left: Integrated AI Reminder */}
                      <div className="w-24 bg-orange-50/50 rounded-xl p-2 border border-orange-100/50 flex flex-col justify-center gap-1 shrink-0 h-full">
@@ -295,7 +356,7 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
                         </div>
                      </div>
                    </div>
-                 </>
+                 </div>
                );
             })() : (
               <div className="relative z-10 w-full">
@@ -414,6 +475,61 @@ const Home = ({ adoptedTrip, isAuthenticated }) => {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+      {/* Start Trip Modal */}
+      <AnimatePresence>
+        {isStartModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsStartModalOpen(false)}
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white w-full max-w-sm rounded-[2rem] p-6 relative z-10 shadow-2xl"
+            >
+              <div className="text-center mb-6">
+                 <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4 text-cyan-600">
+                    <CalendarIcon size={32} />
+                 </div>
+                 <h2 className="text-xl font-bold text-slate-800">设置行程开始时间</h2>
+                 <p className="text-sm text-slate-500 mt-2">请选择您的出发时间，我们将为您开启行程倒计时</p>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">选择日期与时间</label>
+                    <input 
+                      type="datetime-local" 
+                      className="w-full bg-transparent text-lg font-bold text-slate-800 outline-none"
+                      onChange={(e) => setTempStartDate(e.target.value)}
+                    />
+                 </div>
+              </div>
+
+              <div className="flex gap-3">
+                 <button 
+                   onClick={() => setIsStartModalOpen(false)}
+                   className="flex-1 py-3.5 rounded-xl font-bold text-slate-500 bg-slate-100 active:scale-95 transition-transform"
+                 >
+                   取消
+                 </button>
+                 <button 
+                   onClick={handleStartTrip}
+                   disabled={!tempStartDate}
+                   className="flex-1 py-3.5 rounded-xl font-bold text-white bg-cyan-500 shadow-lg shadow-cyan-200 active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none"
+                 >
+                   确认开启
+                 </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

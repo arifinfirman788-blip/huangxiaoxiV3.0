@@ -44,6 +44,13 @@ function App() {
     localStorage.setItem('adoptedTrip', JSON.stringify(trip));
   };
 
+  const handleUpdateTrip = (updates) => {
+    if (!adoptedTrip) return;
+    const newTrip = { ...adoptedTrip, ...updates };
+    setAdoptedTrip(newTrip);
+    localStorage.setItem('adoptedTrip', JSON.stringify(newTrip));
+  };
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleLogin = () => {
@@ -91,7 +98,7 @@ function App() {
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           
           <Route element={<Layout onAdoptTrip={handleAdoptTrip} isAuthenticated={isAuthenticated} hasTrip={!!adoptedTrip} />}>
-            <Route path="/" element={<Home adoptedTrip={adoptedTrip} isAuthenticated={isAuthenticated} />} />
+            <Route path="/" element={<Home adoptedTrip={adoptedTrip} onUpdateTrip={handleUpdateTrip} isAuthenticated={isAuthenticated} />} />
             <Route path="/trip" element={
               <RequireAuth isAuthenticated={isAuthenticated}>
                 <Trip adoptedTrip={adoptedTrip} />
