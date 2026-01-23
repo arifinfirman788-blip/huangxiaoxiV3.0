@@ -23,7 +23,7 @@ const Trip = ({ adoptedTrip, onUpdateTrip }) => {
       distance: '320km',
       rating: '9.6',
       image: getPlaceholder(400, 300, 'Miao Village Trip'),
-      status: 'completed'
+      status: 'planned' // Changed from completed to planned for demo
     },
     {
       id: 'mock-2',
@@ -33,7 +33,7 @@ const Trip = ({ adoptedTrip, onUpdateTrip }) => {
       distance: '180km',
       rating: '9.5',
       image: getPlaceholder(400, 300, 'Zunyi Trip'),
-      status: 'completed'
+      status: 'planned' // Changed from completed to planned for demo
     }
   ];
 
@@ -55,7 +55,7 @@ const Trip = ({ adoptedTrip, onUpdateTrip }) => {
     
     // If it's the adopted trip, update it
     if (adoptedTrip && tripToStart.id === adoptedTrip.id) {
-        onUpdateTrip({ startTime: date.toISOString() });
+        onUpdateTrip({ startTime: date.toISOString(), status: 'upcoming' });
     } else {
         // For mock trips, we can't really update global state effectively without a real backend or more complex state
         // But for demo, we'll just alert
@@ -65,6 +65,17 @@ const Trip = ({ adoptedTrip, onUpdateTrip }) => {
     setIsStartModalOpen(false);
     setTripToStart(null);
     setTempStartDate('');
+  };
+
+  const handleTerminateTrip = (trip, e) => {
+      e.stopPropagation();
+      if (window.confirm('确定要提前结束该行程吗？结束行程后将停止行程提醒。')) {
+          if (adoptedTrip && trip.id === adoptedTrip.id) {
+              onUpdateTrip({ startTime: null, status: 'completed' });
+          } else {
+              alert(`行程 "${trip.title}" 已结束！`);
+          }
+      }
   };
 
   // Dynamically generate tabs based on trips
@@ -174,6 +185,7 @@ const Trip = ({ adoptedTrip, onUpdateTrip }) => {
                 isSelected={selectedTrips.includes(trip.id)}
                 onSelect={() => toggleTripSelection(trip.id)}
                 onStart={(e) => handleOpenStartModal(trip, e)}
+                onTerminate={(e) => handleTerminateTrip(trip, e)}
               />
             ))}
           </AnimatePresence>
@@ -322,7 +334,7 @@ const HorizontalTripCard = ({ country, title, date, users, extraUsers, bgImage, 
   </div>
 );
 
-const TripCard = ({ trip, isCompareMode, isSelected, onSelect, onStart }) => {
+const TripCard = ({ trip, isCompareMode, isSelected, onSelect, onStart, onTerminate }) => {
   const navigate = useNavigate();
   
   return (
@@ -354,7 +366,7 @@ const TripCard = ({ trip, isCompareMode, isSelected, onSelect, onStart }) => {
        </span>
     </div>
 
-    {/* Start Trip Button (Only for planned/upcoming without start time) - Outside the card content logic but physically on top */}
+    {/* Start Trip Button (Only for planned/upcoming without start time) */}
     {!isCompareMode && !trip.startTime && trip.status !== 'completed' && (
       <div className="absolute top-5 right-5 z-30">
         <button 
@@ -363,6 +375,19 @@ const TripCard = ({ trip, isCompareMode, isSelected, onSelect, onStart }) => {
         >
           <Play size={12} fill="currentColor" />
           开始行程
+        </button>
+      </div>
+    )}
+
+    {/* Terminate Trip Button (For trips that have started) */}
+    {!isCompareMode && trip.startTime && trip.status !== 'completed' && (
+      <div className="absolute top-5 right-5 z-30">
+        <button 
+          onClick={onTerminate}
+          className="bg-red-500/80 hover:bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg shadow-red-500/30 flex items-center gap-1.5 active:scale-95 transition-all backdrop-blur-md"
+        >
+          <X size={12} />
+          提前结束
         </button>
       </div>
     )}
