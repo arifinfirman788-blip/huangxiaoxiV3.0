@@ -110,7 +110,8 @@ const Trip = ({ adoptedTrip, onUpdateTrip }) => {
   };
 
   return (
-    <div className="h-full w-full overflow-y-auto scrollbar-hide pb-24 px-6 pt-12 relative">
+    <div className="h-full w-full relative overflow-hidden">
+      <div className="h-full w-full overflow-y-auto scrollbar-hide pb-24 px-6 pt-12">
       {/* Header */}
       <header className="mb-6">
         <h1 className="text-3xl font-black text-slate-800 tracking-tighter leading-tight">精选线路</h1>
@@ -197,6 +198,7 @@ const Trip = ({ adoptedTrip, onUpdateTrip }) => {
           )}
         </div>
       </section>
+      </div>
 
       {/* Floating Action Button for Compare */}
       <AnimatePresence>
@@ -205,7 +207,7 @@ const Trip = ({ adoptedTrip, onUpdateTrip }) => {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="fixed bottom-28 right-6 z-50" // Changed from absolute to fixed
+            className="absolute bottom-28 right-6 z-50"
           >
             <div className="relative group">
                {/* Tooltip */}
