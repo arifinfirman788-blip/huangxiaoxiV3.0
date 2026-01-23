@@ -205,7 +205,7 @@ const Trip = ({ adoptedTrip, onUpdateTrip }) => {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="absolute bottom-28 right-6 z-50"
+            className="fixed bottom-28 right-6 z-50" // Changed from absolute to fixed
           >
             <div className="relative group">
                {/* Tooltip */}
