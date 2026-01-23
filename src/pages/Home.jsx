@@ -268,28 +268,25 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-br from-cyan-100/50 to-blue-100/50 blur-2xl rounded-full opacity-60 pointer-events-none" />
 
             {adoptedTrip && adoptedTrip.status !== 'completed' ? (() => {
-               // 1. If trip has no start time, show Start Button
+               // 1. If trip has no start time, show Trip Ready Message (No Start Button)
                if (!adoptedTrip.startTime) {
                  return (
-                   <div className="flex items-center justify-between w-full relative z-10">
+                   <div 
+                     className="flex items-center justify-between w-full relative z-10 cursor-pointer"
+                     onClick={() => handleNav('/trip')}
+                   >
                      <div className="flex items-center gap-3">
                        <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600">
                          <Play size={24} fill="currentColor" />
                        </div>
                        <div>
                          <h3 className="font-bold text-slate-800">行程已就绪</h3>
-                         <p className="text-xs text-slate-500">点击右侧按钮开启您的旅程</p>
+                         <p className="text-xs text-slate-500">前往行程页管理或开启您的旅程</p>
                        </div>
                      </div>
-                     <button 
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         setIsStartModalOpen(true);
-                       }}
-                       className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-cyan-200 active:scale-95 transition-transform"
-                     >
-                       开始行程
-                     </button>
+                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                       <ArrowUpRight size={16} />
+                     </div>
                    </div>
                  );
                }
