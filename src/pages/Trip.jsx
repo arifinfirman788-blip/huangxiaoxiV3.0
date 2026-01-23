@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, ChevronRight, Users, Clock, ArrowUpRight, Scale, CheckCircle2, Circle, X } from 'lucide-react';
+import { Calendar, MapPin, ChevronRight, Users, Clock, ArrowUpRight, Scale, CheckCircle2, Circle, X, Play, Calendar as CalendarIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getPlaceholder } from '../utils/imageUtils';
 
-const Trip = ({ adoptedTrip }) => {
+const Trip = ({ adoptedTrip, onUpdateTrip }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
   const [isCompareMode, setIsCompareMode] = useState(false);
   const [selectedTrips, setSelectedTrips] = useState([]);
+  const [isStartModalOpen, setIsStartModalOpen] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState('');
+  const [tripToStart, setTripToStart] = useState(null);
 
   // Mock Data for Demo Purposes if adoptedTrip is the only one
   const mockHistoryTrips = [
@@ -35,6 +38,34 @@ const Trip = ({ adoptedTrip }) => {
   ];
 
   const myTrips = adoptedTrip ? [adoptedTrip, ...mockHistoryTrips] : [...mockHistoryTrips];
+
+  const handleOpenStartModal = (trip, e) => {
+    e.stopPropagation();
+    setTripToStart(trip);
+    setIsStartModalOpen(true);
+  };
+
+  const handleStartTrip = () => {
+    if (!tempStartDate || !tripToStart) return;
+    const date = new Date(tempStartDate);
+    if (date <= new Date()) {
+        alert("请选择当前时间之后的时间");
+        return;
+    }
+    
+    // If it's the adopted trip, update it
+    if (adoptedTrip && tripToStart.id === adoptedTrip.id) {
+        onUpdateTrip({ startTime: date.toISOString() });
+    } else {
+        // For mock trips, we can't really update global state effectively without a real backend or more complex state
+        // But for demo, we'll just alert
+        alert(`行程 "${tripToStart.title}" 已开启！`);
+    }
+    
+    setIsStartModalOpen(false);
+    setTripToStart(null);
+    setTempStartDate('');
+  };
 
   // Dynamically generate tabs based on trips
   const uniqueDates = [...new Set(myTrips.map(trip => trip.date))];
@@ -142,6 +173,7 @@ const Trip = ({ adoptedTrip }) => {
                 isCompareMode={isCompareMode}
                 isSelected={selectedTrips.includes(trip.id)}
                 onSelect={() => toggleTripSelection(trip.id)}
+                onStart={(e) => handleOpenStartModal(trip, e)}
               />
             ))}
           </AnimatePresence>
@@ -183,6 +215,62 @@ const Trip = ({ adoptedTrip }) => {
                </button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Start Trip Modal */}
+      <AnimatePresence>
+        {isStartModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsStartModalOpen(false)}
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white w-full max-w-sm rounded-[2rem] p-6 relative z-10 shadow-2xl"
+            >
+              <div className="text-center mb-6">
+                 <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4 text-cyan-600">
+                    <CalendarIcon size={32} />
+                 </div>
+                 <h2 className="text-xl font-bold text-slate-800">开启行程：{tripToStart?.title}</h2>
+                 <p className="text-sm text-slate-500 mt-2">请选择您的出发时间，我们将为您开启行程倒计时</p>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">选择日期与时间</label>
+                    <input 
+                      type="datetime-local" 
+                      className="w-full bg-transparent text-lg font-bold text-slate-800 outline-none"
+                      onChange={(e) => setTempStartDate(e.target.value)}
+                    />
+                 </div>
+              </div>
+
+              <div className="flex gap-3">
+                 <button 
+                   onClick={() => setIsStartModalOpen(false)}
+                   className="flex-1 py-3.5 rounded-xl font-bold text-slate-500 bg-slate-100 active:scale-95 transition-transform"
+                 >
+                   取消
+                 </button>
+                 <button 
+                   onClick={handleStartTrip}
+                   disabled={!tempStartDate}
+                   className="flex-1 py-3.5 rounded-xl font-bold text-white bg-cyan-500 shadow-lg shadow-cyan-200 active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none"
+                 >
+                   确认开启
+                 </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
@@ -234,7 +322,7 @@ const HorizontalTripCard = ({ country, title, date, users, extraUsers, bgImage, 
   </div>
 );
 
-const TripCard = ({ trip, isCompareMode, isSelected, onSelect }) => {
+const TripCard = ({ trip, isCompareMode, isSelected, onSelect, onStart }) => {
   const navigate = useNavigate();
   
   return (
@@ -265,6 +353,19 @@ const TripCard = ({ trip, isCompareMode, isSelected, onSelect }) => {
          {trip.status === 'upcoming' ? '即将开始' : trip.status === 'completed' ? '已完成' : '计划中'}
        </span>
     </div>
+
+    {/* Start Trip Button (Only for planned/upcoming without start time) - Outside the card content logic but physically on top */}
+    {!isCompareMode && !trip.startTime && trip.status !== 'completed' && (
+      <div className="absolute top-5 right-5 z-30">
+        <button 
+          onClick={onStart}
+          className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg shadow-cyan-500/30 flex items-center gap-1.5 active:scale-95 transition-all"
+        >
+          <Play size={12} fill="currentColor" />
+          开始行程
+        </button>
+      </div>
+    )}
 
     {/* Selection Overlay */}
     {isCompareMode && (

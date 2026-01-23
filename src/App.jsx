@@ -101,7 +101,7 @@ function App() {
             <Route path="/" element={<Home adoptedTrip={adoptedTrip} onUpdateTrip={handleUpdateTrip} isAuthenticated={isAuthenticated} />} />
             <Route path="/trip" element={
               <RequireAuth isAuthenticated={isAuthenticated}>
-                <Trip adoptedTrip={adoptedTrip} />
+                <Trip adoptedTrip={adoptedTrip} onUpdateTrip={handleUpdateTrip} />
               </RequireAuth>
             } />
             <Route path="/shop" element={<Shop />} />
