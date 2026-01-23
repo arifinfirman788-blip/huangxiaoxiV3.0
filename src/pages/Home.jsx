@@ -134,6 +134,7 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
   const [tempStartDate, setTempStartDate] = useState('');
+  const [forceUpdate, setForceUpdate] = useState(0); // Add forceUpdate state
   const navigate = useNavigate();
 
   // Navigation wrapper to check auth
@@ -266,7 +267,7 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
             {/* Decorative gradient blob */}
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-br from-cyan-100/50 to-blue-100/50 blur-2xl rounded-full opacity-60 pointer-events-none" />
 
-            {adoptedTrip ? (() => {
+            {adoptedTrip && adoptedTrip.status !== 'completed' ? (() => {
                // 1. If trip has no start time, show Start Button
                if (!adoptedTrip.startTime) {
                  return (
@@ -297,7 +298,7 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
                const startTime = new Date(adoptedTrip.startTime);
                const now = new Date();
                
-               if (startTime > now) {
+               if (startTime > now && adoptedTrip.status !== 'completed') {
                  return (
                    <div className="w-full relative z-10">
                      <div className="flex justify-between items-center mb-3">
@@ -309,12 +310,29 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
                          {startTime.toLocaleDateString()} {startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                        </span>
                      </div>
-                     <FlipCountdown targetDate={startTime} />
+                     <FlipCountdown 
+                       targetDate={startTime} 
+                       onComplete={() => setForceUpdate(prev => prev + 1)} // Force re-render when timer ends
+                     />
                    </div>
                  );
                }
 
-               // 3. If trip has started, show Next Node (Existing Logic)
+               // 3. If trip has started or completed
+               // If completed, check logic
+               if (adoptedTrip.status === 'completed') {
+                   // Fallback to recommendations if completed? Or show "Completed" state?
+                   // User requirement: "当没有行程时展示推荐内容" -> If completed, maybe treat as no active trip?
+                   // But let's check if we should fall through to "No Trip" block.
+                   // Current logic structure is: if (adoptedTrip) { ... } else { Recommendations }
+                   // So if completed, we return null here to let it render recommendations?
+                   // Or render a "Trip Completed" card.
+                   // User said: "terminate... stop trip reminder". This implies reverting to recommendations or "No active trip" state.
+                   // Let's render null here so we can modify the outer condition or just return recommendations here.
+                   return null; 
+               }
+
+               // If trip started (startTime <= now) and not completed, show Next Node (Original Interaction)
                // Flatten all timeline nodes from all days
                const allNodes = adoptedTrip.itinerary?.flatMap(day => day.timeline) || [];
                // Find next upcoming node

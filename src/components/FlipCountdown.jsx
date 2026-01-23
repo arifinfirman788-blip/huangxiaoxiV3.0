@@ -63,7 +63,7 @@ const FlipCard = ({ number, label }) => {
   );
 };
 
-const FlipCountdown = ({ targetDate }) => {
+const FlipCountdown = ({ targetDate, onComplete }) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -82,6 +82,9 @@ const FlipCountdown = ({ targetDate }) => {
           minutes: Math.floor((difference / 1000 / 60) % 60),
           seconds: Math.floor((difference / 1000) % 60)
         };
+      } else {
+        // Notify completion if callback provided
+        if (onComplete) onComplete();
       }
       return { days: 0, hours: 0, minutes: 0, seconds: 0 };
     };
