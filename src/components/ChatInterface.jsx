@@ -289,7 +289,7 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
   return (
     <motion.div 
       layoutId="chat-container"
-      className="fixed inset-0 z-50 bg-slate-50 flex flex-col overflow-hidden"
+      className="absolute inset-0 z-50 bg-slate-50 flex flex-col overflow-hidden"
     >
       {/* Header */}
       <header className={`px-4 py-4 flex items-center gap-3 backdrop-blur-md sticky top-0 z-50 border-b transition-colors ${activeAgent ? `${activeAgent.headerBg} ${activeAgent.border}` : 'bg-white/80 border-slate-100'}`}>
