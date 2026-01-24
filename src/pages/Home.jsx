@@ -425,34 +425,35 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
                      <div 
                        key={i} 
                        className="min-w-[260px] bg-white rounded-[1.2rem] p-4 border border-slate-100 shadow-sm flex flex-col gap-3 relative overflow-hidden active:scale-95 transition-transform cursor-pointer"
-                       onClick={() => {
-                          // Pass specific context to open chat with this agent
-                          handleOpenChat();
-                          // In a real implementation, we would set the initial context for ChatInterface here
-                       }}
-                     >
-                       <div className="flex items-start gap-3">
-                          <div className="relative">
-                             <img src={agent.avatar} alt={agent.name} className="w-14 h-14 rounded-full border-2 border-white shadow-md bg-slate-100 object-cover" />
-                             <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-${agent.color}-100 border-2 border-white flex items-center justify-center`}>
-                                <Sparkles size={10} className={`text-${agent.color}-600`} />
-                             </div>
-                          </div>
-                          <div className="flex-1 min-w-0 pt-1">
-                             <div className="flex items-center justify-between mb-1">
-                                <h4 className="font-bold text-slate-800 text-sm truncate">{agent.name}</h4>
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full bg-${agent.color}-50 text-${agent.color}-600 font-bold border border-${agent.color}-100 shrink-0`}>{agent.role}</span>
-                             </div>
-                             <div className="flex flex-wrap gap-1.5">
-                                {agent.services.map((service, idx) => (
-                                   <span key={idx} className="text-[10px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-100">
-                                      {service}
-                                   </span>
-                                ))}
-                             </div>
-                          </div>
-                       </div>
-                     </div>
+                         onClick={() => {
+                           // Pass specific context to open chat with this agent
+                           handleOpenChat();
+                           // In a real implementation, we would set the initial context for ChatInterface here
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                           <div className="relative">
+                              <img src={agent.avatar} alt={agent.name} className="w-14 h-14 rounded-full border-2 border-white shadow-md bg-slate-100 object-cover" />
+                              <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-${agent.color}-100 border-2 border-white flex items-center justify-center`}>
+                                 <Sparkles size={10} className={`text-${agent.color}-600`} />
+                              </div>
+                           </div>
+                           <div className="flex-1 min-w-0 pt-1">
+                              <div className="flex items-center justify-between mb-1.5">
+                                 <h4 className="font-bold text-slate-800 text-sm truncate">{agent.name}</h4>
+                                 <span className={`text-[9px] px-1.5 py-0.5 rounded-full bg-${agent.color}-50 text-${agent.color}-600 font-bold border border-${agent.color}-100 shrink-0`}>{agent.role}</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                 {agent.services.map((service, idx) => (
+                                    <span key={idx} className={`text-[10px] flex items-center gap-1 px-2 py-1 rounded-lg border bg-${agent.color}-50/50 border-${agent.color}-100 text-${agent.color}-700`}>
+                                       {idx === 0 ? <Check size={8} className={`text-${agent.color}-500`} /> : <div className={`w-1 h-1 rounded-full bg-${agent.color}-400`} />}
+                                       {service}
+                                    </span>
+                                 ))}
+                              </div>
+                           </div>
+                        </div>
+                      </div>
                    ))}
                 </div>
               </div>
