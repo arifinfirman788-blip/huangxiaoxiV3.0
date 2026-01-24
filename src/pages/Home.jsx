@@ -6,6 +6,7 @@ import { categories } from '../data/agents';
 import TuoSaiImage from '../image/托腮_1.png';
 import FlipCountdown from '../components/FlipCountdown';
 import ChatInterface from '../components/ChatInterface';
+import { getPlaceholder } from '../utils/imageUtils';
 
 const iconMap = {
   Landmark: Landmark,
@@ -400,56 +401,48 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
                 <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-5 px-5 pb-2">
                    {[
                      { 
-                       title: "黄果树专属导游", 
-                       desc: "带你避开人流，打卡最佳机位", 
-                       tag: "景区服务", 
-                       color: "text-purple-600", 
-                       bg: "bg-purple-50",
-                       icon: Camera
+                       name: "黄果树·小向导", 
+                       role: "景区智能体", 
+                       desc: "为您规划最佳游览路线，实时避开拥堵，提供语音讲解。", 
+                       color: "purple", 
+                       avatar: getPlaceholder(100, 100, 'Guide')
                      },
                      { 
-                       title: "凯宾斯基·管家", 
-                       desc: "今晚入住立享行政酒廊礼遇", 
-                       tag: "酒店特惠", 
-                       color: "text-indigo-600", 
-                       bg: "bg-indigo-50",
-                       icon: Building
+                       name: "凯宾斯基·管家", 
+                       role: "酒店智能体", 
+                       desc: "办理入住、客房服务响应、行政酒廊礼遇预约。", 
+                       color: "indigo", 
+                       avatar: getPlaceholder(100, 100, 'Butler')
                      },
                      { 
-                       title: "出行调度中心", 
-                       desc: "贵阳龙洞堡机场接机服务", 
-                       tag: "出行无忧", 
-                       color: "text-green-600", 
-                       bg: "bg-green-50",
-                       icon: Car
+                       name: "老凯里·店长", 
+                       role: "餐饮智能体", 
+                       desc: "在线排队取号，推荐本店必吃特色菜，专属优惠买单。", 
+                       color: "orange", 
+                       avatar: getPlaceholder(100, 100, 'Chef')
                      }
-                   ].map((item, i) => {
-                     const ItemIcon = item.icon;
-                     return (
-                       <motion.div
-                         key={i}
-                         initial={{ opacity: 0, x: 20 }}
-                         animate={{ opacity: 1, x: 0 }}
-                         transition={{ delay: i * 0.1 }}
-                         onClick={() => handleNav('/chat-planning')}
-                         className="min-w-[200px] bg-white rounded-xl p-3 border border-slate-100 shadow-sm active:scale-95 transition-transform cursor-pointer"
-                       >
-                          <div className="flex items-start justify-between mb-2">
-                             <div className={`w-8 h-8 rounded-full ${item.bg} flex items-center justify-center`}>
-                                <ItemIcon size={14} className={item.color} />
-                             </div>
-                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${item.bg} ${item.color}`}>
-                               {item.tag}
-                             </span>
+                   ].map((agent, i) => (
+                     <div 
+                       key={i} 
+                       className="min-w-[240px] bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex flex-col gap-3 relative overflow-hidden active:scale-95 transition-transform cursor-pointer"
+                       onClick={() => handleNav('/chat-planning')}
+                     >
+                       <div className="flex items-center gap-3">
+                          <img src={agent.avatar} alt={agent.name} className="w-12 h-12 rounded-full border-2 border-white shadow-sm bg-slate-100 object-cover" />
+                          <div>
+                             <h4 className="font-bold text-slate-800 text-sm">{agent.name}</h4>
+                             <span className={`text-[10px] px-1.5 py-0.5 rounded-md bg-${agent.color}-50 text-${agent.color}-600 font-bold border border-${agent.color}-100`}>{agent.role}</span>
                           </div>
-                          <h4 className="text-xs font-bold text-slate-800 mb-1">{item.title}</h4>
-                          <p className="text-[10px] text-slate-400 leading-tight">{item.desc}</p>
-                          <button className="mt-3 w-full py-1.5 rounded-lg bg-slate-900 text-white text-[10px] font-bold">
-                             立即查看
-                          </button>
-                       </motion.div>
-                     );
-                   })}
+                       </div>
+                       <div className="bg-slate-50 rounded-xl p-2.5 text-xs text-slate-500 leading-relaxed">
+                          <span className="font-bold text-slate-700">我能帮你：</span>
+                          {agent.desc}
+                       </div>
+                       <button className="w-full py-2 rounded-lg bg-slate-900 text-white text-xs font-bold shadow-md shadow-slate-200">
+                          接入服务
+                       </button>
+                     </div>
+                   ))}
                 </div>
               </div>
             )}
