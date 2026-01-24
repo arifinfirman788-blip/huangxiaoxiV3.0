@@ -1,10 +1,531 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, Mic, Plane, Utensils, Flag, Sparkles, Check, ChevronDown, ChevronUp, Star, Info, Car, Camera, Hotel, Loader2, Wand2, RefreshCcw, ArrowRight, Bed, MapPin } from 'lucide-react';
+import { ArrowLeft, Send, Mic, Plane, Utensils, Flag, Sparkles, Check, ChevronDown, ChevronUp, Star, Info, Car, Camera, Hotel, Loader2, Wand2, RefreshCcw, ArrowRight, Bed, MapPin, X, ZoomIn, ZoomOut } from 'lucide-react';
 import TuoSaiImage from '../image/托腮_1.png';
 import { getPlaceholder } from '../utils/imageUtils';
 
-const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) => {
+const mockUser = {
+    name: "陈小明",
+    phone: "13800138000",
+    idCard: "520102199001011234"
+};
+
+const getAutoFilledValue = (req) => {
+    if (req.includes('姓名') || req.includes('人名')) return mockUser.name;
+    if (req.includes('电话') || req.includes('手机')) return mockUser.phone;
+    if (req.includes('身份证') || req.includes('证件')) return mockUser.idCard;
+    return '';
+};
+
+const ImageViewer = ({ imageUrl, onClose }) => {
+    const [scale, setScale] = useState(1);
+    
+    const handleZoomIn = (e) => {
+        e.stopPropagation();
+        setScale(prev => Math.min(prev + 0.5, 3));
+    };
+
+    const handleZoomOut = (e) => {
+        e.stopPropagation();
+        setScale(prev => Math.max(prev - 0.5, 1));
+    };
+
+    return (
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/95 z-[200] flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            <div className="relative w-full h-full flex items-center justify-center">
+                <motion.img 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: scale, opacity: 1 }}
+                    className="max-w-full max-h-full object-contain transition-transform duration-200"
+                    src={imageUrl} 
+                    alt="Full view"
+                    onClick={(e) => e.stopPropagation()}
+                />
+                
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/10 backdrop-blur-md rounded-full px-4 py-2 border border-white/20">
+                    <button onClick={handleZoomOut} className="p-2 text-white hover:text-cyan-400 disabled:opacity-50" disabled={scale <= 1}>
+                        <ZoomOut size={20} />
+                    </button>
+                    <span className="text-white text-xs font-mono w-12 text-center">{Math.round(scale * 100)}%</span>
+                    <button onClick={handleZoomIn} className="p-2 text-white hover:text-cyan-400 disabled:opacity-50" disabled={scale >= 3}>
+                        <ZoomIn size={20} />
+                    </button>
+                </div>
+
+                <button 
+                    onClick={onClose}
+                    className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors backdrop-blur-md"
+                >
+                    <X size={20} />
+                </button>
+            </div>
+        </motion.div>
+    );
+};
+
+const HotelServiceCard = ({ title, requirements, onSubmit, onViewImage }) => {
+    const [selectedRoom, setSelectedRoom] = useState(null);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [formData, setFormData] = useState(() => {
+        const initial = {};
+        requirements.forEach(req => {
+            initial[req] = getAutoFilledValue(req);
+        });
+        return initial;
+    });
+
+    const hasAutoFill = requirements.some(req => getAutoFilledValue(req));
+
+    const rooms = [
+        { id: 1, name: '高级大床房', price: '¥458', image: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=300&auto=format&fit=crop', tags: ['25㎡', '大窗', '含早'] },
+        { id: 2, name: '行政双床房', price: '¥588', image: 'https://images.unsplash.com/photo-1590490360182-c87295ecc059?q=80&w=300&auto=format&fit=crop', tags: ['35㎡', '浴缸', '双早'] },
+        { id: 3, name: '全景套房', price: '¥888', image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=300&auto=format&fit=crop', tags: ['50㎡', '落地窗', '行政礼遇'] },
+    ];
+
+    const handleSubmit = () => {
+        if (!selectedRoom) return;
+        setIsSubmitted(true);
+        if (onSubmit) onSubmit({ ...formData, roomType: selectedRoom.name, price: selectedRoom.price });
+    };
+
+    return (
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3 w-full">
+            <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                <Hotel size={16} className="text-indigo-500" />
+                {title}
+            </h4>
+            
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+                {rooms.map(room => (
+                    <div 
+                        key={room.id}
+                        onClick={() => !isSubmitted && setSelectedRoom(room)}
+                        className={`shrink-0 w-32 rounded-xl border overflow-hidden transition-all cursor-pointer ${selectedRoom?.id === room.id ? 'border-indigo-500 ring-2 ring-indigo-100' : 'border-slate-200'}`}
+                    >
+                        <div className="h-20 bg-slate-100 relative group">
+                            <img 
+                                src={room.image} 
+                                alt={room.name} 
+                                className="w-full h-full object-cover" 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onViewImage) onViewImage(room.image);
+                                }}
+                            />
+                            <div className="absolute top-1 right-1 bg-black/30 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                <ZoomIn size={12} className="text-white" />
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 pointer-events-none">
+                                <span className="text-white text-xs font-bold">{room.price}</span>
+                            </div>
+                        </div>
+                        <div className="p-2">
+                            <div className="text-[10px] font-bold text-slate-800 truncate mb-1">{room.name}</div>
+                            <div className="flex flex-wrap gap-1">
+                                {room.tags.map((tag, i) => (
+                                    <span key={i} className="text-[8px] bg-slate-50 text-slate-500 px-1 rounded">{tag}</span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="space-y-3 pt-2 border-t border-slate-50">
+                {hasAutoFill && !isSubmitted && (
+                    <div className="bg-indigo-50 text-indigo-600 text-[10px] px-2 py-1.5 rounded-lg mb-2 flex items-center gap-1.5 border border-indigo-100">
+                        <Sparkles size={12} />
+                        黄小西已为您自动填充用户信息
+                    </div>
+                )}
+                {requirements.filter(r => r !== '房型需求').map((req, idx) => (
+                    <div key={idx} className="flex flex-col gap-1 text-xs text-slate-600">
+                        <label className="font-bold">{req}</label>
+                        <input 
+                            type="text" 
+                            disabled={isSubmitted}
+                            value={formData[req] || ''}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-500"
+                            placeholder={`请输入${req}`}
+                            onChange={(e) => setFormData(prev => ({ ...prev, [req]: e.target.value }))}
+                        />
+                    </div>
+                ))}
+            </div>
+            
+            {!isSubmitted ? (
+                <button 
+                    onClick={handleSubmit}
+                    disabled={!selectedRoom}
+                    className="w-full mt-2 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md shadow-indigo-200 active:scale-95 transition-all disabled:opacity-50"
+                >
+                    确认预订
+                </button>
+            ) : (
+                <div className="w-full mt-2 py-2.5 rounded-xl bg-green-50 text-green-600 font-bold text-xs flex items-center justify-center gap-1 border border-green-200">
+                    <Check size={14} /> 已提交
+                </div>
+            )}
+        </div>
+    );
+};
+
+const DiningServiceCard = ({ title, requirements, onSubmit, onViewImage }) => {
+    const [selectedType, setSelectedType] = useState(null);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [formData, setFormData] = useState(() => {
+        const initial = {};
+        requirements.forEach(req => {
+            initial[req] = getAutoFilledValue(req);
+        });
+        return initial;
+    });
+
+    const hasAutoFill = requirements.some(req => getAutoFilledValue(req));
+
+    const types = [
+        { id: 1, name: '景观散台', label: '2-4人', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=300&auto=format&fit=crop' },
+        { id: 2, name: '商务包间', label: '6-10人', image: 'https://images.unsplash.com/photo-1550966871-3ed3c47e2ce2?q=80&w=300&auto=format&fit=crop' },
+        { id: 3, name: '豪华包房', label: '10-16人', image: 'https://images.unsplash.com/photo-1578474846511-04ba529f0b88?q=80&w=300&auto=format&fit=crop' },
+    ];
+
+    const handleSubmit = () => {
+        if (!selectedType) return;
+        setIsSubmitted(true);
+        if (onSubmit) onSubmit({ ...formData, tableType: selectedType.name });
+    };
+
+    return (
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3 w-full">
+            <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                <Utensils size={16} className="text-orange-500" />
+                {title}
+            </h4>
+            
+            <div className="grid grid-cols-3 gap-2">
+                {types.map(type => (
+                    <div 
+                        key={type.id}
+                        onClick={() => !isSubmitted && setSelectedType(type)}
+                        className={`rounded-xl border overflow-hidden transition-all cursor-pointer relative ${selectedType?.id === type.id ? 'border-orange-500 ring-2 ring-orange-100' : 'border-slate-200'}`}
+                    >
+                        <div className="h-16 bg-slate-100 relative group">
+                            <img 
+                                src={type.image} 
+                                alt={type.name} 
+                                className="w-full h-full object-cover"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onViewImage) onViewImage(type.image);
+                                }}
+                            />
+                            <div className="absolute top-1 right-1 bg-black/30 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                <ZoomIn size={12} className="text-white" />
+                            </div>
+                        </div>
+                        <div className="p-1.5 text-center bg-white">
+                            <div className="text-[9px] font-bold text-slate-800">{type.name}</div>
+                            <div className="text-[8px] text-slate-400">{type.label}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="space-y-3 pt-2">
+                {hasAutoFill && !isSubmitted && (
+                    <div className="bg-orange-50 text-orange-600 text-[10px] px-2 py-1.5 rounded-lg mb-2 flex items-center gap-1.5 border border-orange-100">
+                        <Sparkles size={12} />
+                        黄小西已为您自动填充用户信息
+                    </div>
+                )}
+                {requirements.map((req, idx) => (
+                    <div key={idx} className="flex flex-col gap-1 text-xs text-slate-600">
+                        <label className="font-bold">{req}</label>
+                        <input 
+                            type="text" 
+                            disabled={isSubmitted}
+                            value={formData[req] || ''}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:border-orange-500"
+                            placeholder={`请输入${req}`}
+                            onChange={(e) => setFormData(prev => ({ ...prev, [req]: e.target.value }))}
+                        />
+                    </div>
+                ))}
+            </div>
+            
+            {!isSubmitted ? (
+                <button 
+                    onClick={handleSubmit}
+                    disabled={!selectedType}
+                    className="w-full mt-2 py-2.5 rounded-xl bg-orange-500 text-white font-bold text-xs shadow-md shadow-orange-200 active:scale-95 transition-all disabled:opacity-50"
+                >
+                    确认订座
+                </button>
+            ) : (
+                <div className="w-full mt-2 py-2.5 rounded-xl bg-green-50 text-green-600 font-bold text-xs flex items-center justify-center gap-1 border border-green-200">
+                    <Check size={14} /> 已提交
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ScenicServiceCard = ({ title, requirements, onSubmit, onViewImage }) => {
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [formData, setFormData] = useState(() => {
+        const initial = {};
+        requirements.forEach(req => {
+            initial[req] = getAutoFilledValue(req);
+        });
+        return initial;
+    });
+
+    const hasAutoFill = requirements.some(req => getAutoFilledValue(req));
+
+    const handleSubmit = () => {
+        setIsSubmitted(true);
+        if (onSubmit) onSubmit(formData);
+    };
+
+    const imageUrl = "https://images.unsplash.com/photo-1527684651001-731c474bbb5a?q=80&w=600&auto=format&fit=crop";
+
+    return (
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 w-full">
+            <div 
+                className="h-32 relative group cursor-pointer"
+                onClick={() => onViewImage && onViewImage(imageUrl)}
+            >
+                <img src={imageUrl} alt="Huangguoshu" className="w-full h-full object-cover" />
+                <div className="absolute top-2 right-2 bg-black/30 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    <ZoomIn size={16} className="text-white" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute bottom-3 left-3 text-white pointer-events-none">
+                    <h4 className="font-bold text-sm flex items-center gap-1">
+                        <Camera size={14} />
+                        {title}
+                    </h4>
+                    <p className="text-[10px] opacity-90 line-clamp-1">亚洲第一大瀑布，86版西游记取景地</p>
+                </div>
+            </div>
+
+            <div className="p-4 space-y-3">
+                <div className="bg-purple-50 p-2.5 rounded-xl text-[10px] text-purple-800 leading-relaxed border border-purple-100">
+                    <span className="font-bold">文化背景：</span>
+                    黄果树瀑布群是世界上典型的喀斯特瀑布群。除主瀑布外，还有螺丝滩、陡坡塘等18个瀑布，组成了庞大的瀑布家族。
+                </div>
+
+                <div className="space-y-3">
+                    {hasAutoFill && !isSubmitted && (
+                        <div className="bg-purple-50 text-purple-600 text-[10px] px-2 py-1.5 rounded-lg mb-2 flex items-center gap-1.5 border border-purple-100">
+                            <Sparkles size={12} />
+                            黄小西已为您自动填充用户信息
+                        </div>
+                    )}
+                    {requirements.map((req, idx) => (
+                        <div key={idx} className="flex flex-col gap-1 text-xs text-slate-600">
+                            <label className="font-bold">{req}</label>
+                            <input 
+                                type="text" 
+                                disabled={isSubmitted}
+                                value={formData[req] || ''}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:border-purple-500"
+                                placeholder={`请输入${req}`}
+                                onChange={(e) => setFormData(prev => ({ ...prev, [req]: e.target.value }))}
+                            />
+                        </div>
+                    ))}
+                </div>
+                
+                {!isSubmitted ? (
+                    <button 
+                        onClick={handleSubmit}
+                        className="w-full mt-2 py-2.5 rounded-xl bg-purple-600 text-white font-bold text-xs shadow-md shadow-purple-200 active:scale-95 transition-all hover:bg-purple-700"
+                    >
+                        提交预约
+                    </button>
+                ) : (
+                    <div className="w-full mt-2 py-2.5 rounded-xl bg-green-50 text-green-600 font-bold text-xs flex items-center justify-center gap-1 border border-green-200">
+                        <Check size={14} /> 已提交
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const TransportServiceCard = ({ title, requirements, onSubmit, onViewImage }) => {
+    const [selectedCar, setSelectedCar] = useState(null);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [formData, setFormData] = useState(() => {
+        const initial = {};
+        requirements.forEach(req => {
+            initial[req] = getAutoFilledValue(req);
+        });
+        return initial;
+    });
+
+    const hasAutoFill = requirements.some(req => getAutoFilledValue(req));
+
+    const cars = [
+        { id: 1, name: '舒适5座', model: '大众帕萨特或同级', image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?q=80&w=300&auto=format&fit=crop' },
+        { id: 2, name: '商务7座', model: '别克GL8', image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?q=80&w=300&auto=format&fit=crop' },
+    ];
+
+    const handleSubmit = () => {
+        if (!selectedCar) return;
+        setIsSubmitted(true);
+        if (onSubmit) onSubmit({ ...formData, carType: selectedCar.name });
+    };
+
+    return (
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3 w-full">
+            <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                <Car size={16} className="text-green-600" />
+                {title}
+            </h4>
+            
+            <div className="grid grid-cols-2 gap-2">
+                {cars.map(car => (
+                    <div 
+                        key={car.id}
+                        onClick={() => !isSubmitted && setSelectedCar(car)}
+                        className={`rounded-xl border overflow-hidden transition-all cursor-pointer ${selectedCar?.id === car.id ? 'border-green-500 ring-2 ring-green-100' : 'border-slate-200'}`}
+                    >
+                        <div className="h-20 bg-slate-100 relative group">
+                             <img 
+                                src={car.image} 
+                                alt={car.name} 
+                                className="w-full h-full object-cover" 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onViewImage) onViewImage(car.image);
+                                }}
+                             />
+                             <div className="absolute top-1 right-1 bg-black/30 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                <ZoomIn size={12} className="text-white" />
+                             </div>
+                        </div>
+                        <div className="p-2 bg-white">
+                            <div className="text-xs font-bold text-slate-800">{car.name}</div>
+                            <div className="text-[9px] text-slate-400 truncate">{car.model}</div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="space-y-3 pt-2">
+                {hasAutoFill && !isSubmitted && (
+                    <div className="bg-green-50 text-green-600 text-[10px] px-2 py-1.5 rounded-lg mb-2 flex items-center gap-1.5 border border-green-100">
+                        <Sparkles size={12} />
+                        黄小西已为您自动填充用户信息
+                    </div>
+                )}
+                {requirements.filter(r => r !== '车型要求').map((req, idx) => (
+                    <div key={idx} className="flex flex-col gap-1 text-xs text-slate-600">
+                        <label className="font-bold">{req}</label>
+                        <input 
+                            type="text" 
+                            disabled={isSubmitted}
+                            value={formData[req] || ''}
+                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 outline-none focus:border-green-500"
+                            placeholder={`请输入${req}`}
+                            onChange={(e) => setFormData(prev => ({ ...prev, [req]: e.target.value }))}
+                        />
+                    </div>
+                ))}
+            </div>
+            
+            {!isSubmitted ? (
+                <button 
+                    onClick={handleSubmit}
+                    disabled={!selectedCar}
+                    className="w-full mt-2 py-2.5 rounded-xl bg-green-600 text-white font-bold text-xs shadow-md shadow-green-200 active:scale-95 transition-all disabled:opacity-50"
+                >
+                    确认用车
+                </button>
+            ) : (
+                <div className="w-full mt-2 py-2.5 rounded-xl bg-green-50 text-green-600 font-bold text-xs flex items-center justify-center gap-1 border border-green-200">
+                    <Check size={14} /> 已提交
+                </div>
+            )}
+        </div>
+    );
+};
+
+const InfoRequirementCard = ({ title, requirements, onSubmit }) => {
+    const [formData, setFormData] = useState(() => {
+        const initial = {};
+        requirements.forEach(req => {
+            initial[req] = getAutoFilledValue(req);
+        });
+        return initial;
+    });
+    const [isSubmitted, setIsSubmitted] = useState(false);
+
+    const hasAutoFill = requirements.some(req => getAutoFilledValue(req));
+
+    const handleSubmit = () => {
+        setIsSubmitted(true);
+        if (onSubmit) onSubmit(formData);
+    };
+
+    return (
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3">
+            <h4 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+                <Info size={16} className="text-cyan-500" />
+                {title}
+            </h4>
+            <div className="space-y-3">
+                {hasAutoFill && !isSubmitted && (
+                    <div className="bg-cyan-50 text-cyan-600 text-[10px] px-2 py-1.5 rounded-lg mb-2 flex items-center gap-1.5 border border-cyan-100">
+                        <Sparkles size={12} />
+                        黄小西已为您自动填充用户信息
+                    </div>
+                )}
+                {requirements.map((req, idx) => (
+                    <div key={idx} className="flex flex-col gap-1 text-xs text-slate-600">
+                        <label className="font-bold flex items-center gap-1.5">
+                            <div className="w-4 h-4 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                {idx + 1}
+                            </div>
+                            {req}
+                        </label>
+                        <input 
+                            type="text" 
+                            disabled={isSubmitted}
+                            value={formData[req] || ''}
+                            className={`w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-slate-800 outline-none focus:border-cyan-500 transition-colors ${isSubmitted ? 'opacity-70 bg-slate-100' : ''}`}
+                            placeholder={`请输入${req}`}
+                            onChange={(e) => setFormData(prev => ({ ...prev, [req]: e.target.value }))}
+                        />
+                    </div>
+                ))}
+            </div>
+            
+            {!isSubmitted ? (
+                <button 
+                    onClick={handleSubmit}
+                    className="w-full mt-2 py-2.5 rounded-xl bg-cyan-500 text-white font-bold text-xs shadow-md shadow-cyan-200 active:scale-95 transition-all hover:bg-cyan-600"
+                >
+                    提交信息
+                </button>
+            ) : (
+                <div className="w-full mt-2 py-2.5 rounded-xl bg-green-50 text-green-600 font-bold text-xs flex items-center justify-center gap-1 border border-green-200">
+                    <Check size={14} /> 已提交
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onServiceSubmit, onConnectAgent, agentFeedback, merchantMessage, onUserMessage, isHumanMode }) => {
   const scrollRef = useRef(null);
   const [messages, setMessages] = useState([
     {
@@ -20,6 +541,7 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
   const [activeAgent, setActiveAgent] = useState(null);
   const [currentNode, setCurrentNode] = useState(null);
   const [planningContext, setPlanningContext] = useState(null);
+  const [viewingImage, setViewingImage] = useState(null);
 
   // Helper to get agent info based on type
   const getAgentInfo = (type) => {
@@ -116,6 +638,23 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
     ]
   };
 
+  // Listen for agent feedback
+  useEffect(() => {
+    if (agentFeedback) {
+        // Add a message from the agent (Huang Xiaoxi relaying the feedback)
+        const feedbackMsg = {
+            id: Date.now(),
+            sender: 'agent',
+            text: agentFeedback.text,
+            time: agentFeedback.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, feedbackMsg]);
+        
+        // Revert to Huang Xiaoxi (Service Agent hides)
+        setActiveAgent(null);
+    }
+  }, [agentFeedback]);
+
   useEffect(() => {
     let timer;
     if (initialContext?.importedData) {
@@ -149,6 +688,37 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
+    } else if (initialContext?.role) {
+      setCurrentTrip(defaultTrip);
+      
+      // Generate welcome message from Huang Xiaoxi (Dispatcher)
+      const welcomeText = `你好！我是黄小西。看到您对【${initialContext.desc}】感兴趣，我可以为您调度该智能体为您服务，或者您可以直接告诉我您的需求。`;
+      
+      const prompts = initialContext.services ? initialContext.services.slice(0, 2).map(s => `我想${s}`) : ['我想咨询', '我想预订'];
+      
+      // Add "Connect to" prompt as the last option
+      prompts.push(`联系${initialContext.desc}`);
+
+      setMessages([
+        {
+          id: 1,
+          sender: 'agent',
+          text: welcomeText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        },
+        {
+          id: 1.5,
+          sender: 'agent',
+          type: 'chips',
+          chips: prompts,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+        // REMOVED immediate Service Card
+      ]);
+
+      // Do NOT set activeAgent, so it defaults to Huang Xiaoxi (null)
+      // setActiveAgent({...}); 
+
     } else if (initialMode === 'day_planning') {
         const { startPoint, endPoint, dayIndex, currentItinerary } = initialContext;
         setPlanningContext(initialContext);
@@ -199,13 +769,122 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
     return () => clearTimeout(timer);
   }, [initialMode, initialContext]);
 
-  const handleSend = () => {
-    if (!inputText.trim()) return;
+  // Listen for merchant manual messages
+  useEffect(() => {
+    if (merchantMessage) {
+        setMessages(prev => [...prev, merchantMessage]);
+        // Also report to App that a message was added (handled by App already, but we need to ensure local state is in sync)
+    }
+  }, [merchantMessage]);
+
+  // Helper to dispatch AI response (either to user or as suggestion to merchant)
+  const dispatchAiResponse = (msg) => {
+      if (isHumanMode) {
+          const suggestion = { 
+              ...msg, 
+              isSuggestion: true, 
+              // Ensure text is present for the merchant to see/use
+              text: msg.text || (msg.title ? `[卡片] ${msg.title}` : `[服务] ${msg.type}`)
+          };
+          if (activeAgent && onUserMessage) {
+              onUserMessage(suggestion);
+          }
+      } else {
+          setMessages(prev => [...prev, msg]);
+          if (activeAgent && onUserMessage) {
+              onUserMessage(msg);
+          }
+      }
+  };
+
+  const handleServiceCompletion = (serviceType, data, entityContext) => {
+      // 1. Call the prop callback if it exists
+      if (onServiceSubmit) {
+          let contextToPass = activeAgent || initialContext;
+          if (entityContext) {
+             const type = entityContext.name.includes('酒店') ? 'hotel' :
+                          entityContext.name.includes('餐饮') ? 'food' :
+                          entityContext.name.includes('车') ? 'transport' : 'scenic';
+             const agentInfo = getAgentInfo(type);
+             contextToPass = {
+                 ...agentInfo,
+                 name: entityContext.name,
+                 description: `${entityContext.desc}专属服务`,
+             };
+          }
+
+          onServiceSubmit({
+              serviceType,
+              data,
+              agentContext: contextToPass
+          });
+      }
+
+      // 2. Generate Follow-up Message
+      setTimeout(() => {
+          let followUpText = '';
+          let chips = [];
+          
+          // Determine the contact chip based on context
+          let contactChip = '联系人工客服';
+          
+          // Priority: entityContext (from specific chat) > activeAgent (current session) > initialContext (entry point)
+          if (entityContext) {
+              contactChip = `联系${entityContext.desc || entityContext.name}`;
+          } else if (activeAgent) {
+              contactChip = `联系${activeAgent.name}`;
+          } else if (initialContext && (initialContext.desc || initialContext.name)) {
+              contactChip = `联系${initialContext.desc || initialContext.name}`;
+          }
+
+          if (serviceType.includes('酒店') || serviceType.includes('住宿')) {
+              followUpText = '酒店预订已提交！还需要为您安排接送机服务吗？或者为您推荐附近的必吃美食？';
+              chips = [contactChip, '预约接送机', '附近美食'];
+          } else if (serviceType.includes('订座') || serviceType.includes('餐饮') || serviceType.includes('用餐') || serviceType.includes('排队')) {
+               followUpText = '餐厅座位已锁定！建议您提前规划好行程路线。需要为您呼叫网约车前往吗？';
+               chips = [contactChip, '呼叫网约车', '查看路线'];
+          } else if (serviceType.includes('门票') || serviceType.includes('景区') || serviceType.includes('导览') || serviceType.includes('预约')) {
+               followUpText = '门票预约成功！该景区较大，建议您预订一位金牌讲解员，体验更好哦。';
+               chips = [contactChip, '周边住宿', '美食推荐'];
+          } else if (serviceType.includes('用车') || serviceType.includes('交通') || serviceType.includes('接机') || serviceType.includes('包车')) {
+               followUpText = '用车服务已安排！司机稍后会联系您。还需要为您推荐目的地附近的玩法吗？';
+               chips = [contactChip, '目的地玩法', '预订酒店'];
+          } else {
+               followUpText = '服务需求已提交！请问还有什么可以帮您的吗？';
+               chips = [contactChip, '查看行程', '预订酒店'];
+          }
+
+          const followUpMsg = {
+              id: Date.now(),
+              sender: 'agent',
+              text: followUpText,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          dispatchAiResponse(followUpMsg);
+
+          // 3. Push Chips
+          setTimeout(() => {
+               const chipsMsg = {
+                  id: Date.now() + 1,
+                  sender: 'agent',
+                  type: 'chips',
+                  chips: chips,
+                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+               };
+               dispatchAiResponse(chipsMsg);
+          }, 800);
+
+      }, 1500);
+  };
+
+  const handleSend = (text) => {
+    const content = typeof text === 'string' ? text : inputText;
+    if (!content.trim()) return;
 
     const newMsg = {
       id: Date.now(),
       sender: 'user',
-      text: inputText,
+      text: content,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
@@ -213,10 +892,16 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
     setInputText('');
     setIsTyping(true);
 
+    // Sync to App if agent active
+    if (activeAgent && onUserMessage) {
+        onUserMessage(newMsg);
+    }
+
     setTimeout(() => {
       setIsTyping(false);
 
-      if (inputText.includes('门票修改') && currentNode) {
+
+      if (content.includes('门票修改') && currentNode) {
          const policyText = `【${currentNode.title || currentNode.details?.name}】门票修改政策：\n1. 提前24小时可免费修改；\n2. 当日修改需收取10%手续费；\n3. 已使用门票不可修改`;
          
          const policyMsg = {
@@ -225,7 +910,7 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
             text: policyText,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
          };
-         setMessages(prev => [...prev, policyMsg]);
+         dispatchAiResponse(policyMsg);
 
          setTimeout(() => {
              const agentInfo = getAgentInfo(currentNode.type);
@@ -237,12 +922,403 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
                agentInfo: agentInfo,
                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
              };
-             setMessages(prev => [...prev, cardMsg]);
+             dispatchAiResponse(cardMsg);
          }, 1000);
          return;
       }
       
       let aiText = '';
+      const isConnectRequest = content.includes('联系') || content.includes('接入') || content.includes('connect');
+      
+      // Entity Detection from User Input
+      let detectedEntity = null;
+      if (content.includes('黄果树')) {
+          detectedEntity = { name: '黄果树瀑布智能体', desc: '黄果树瀑布' };
+      } else if (content.includes('亚朵')) {
+          detectedEntity = { name: '亚朵酒店服务智能体', desc: '亚朵酒店' };
+      } else if (content.includes('全聚德')) {
+          detectedEntity = { name: '全聚德服务智能体', desc: '全聚德' };
+      } else if (content.includes('神州')) {
+          detectedEntity = { name: '神州专车智能体', desc: '神州专车' };
+      } else if (content.includes('博物馆')) {
+          detectedEntity = { name: '省博物馆智能体', desc: '省博物馆' };
+      }
+
+      // Check for Info Requirements (Ticket/Guide)
+      // 1. Scenic - Ticket (Huangguoshu)
+      if (content.includes('购票') || content.includes('门票')) {
+          const infoMsg = {
+              id: Date.now() + 1,
+              sender: 'agent',
+              type: 'info_card',
+              title: '景区购票所需信息',
+              requirements: ['游客姓名', '身份证号', '联系电话', '入园日期', '优待证件(如有)'],
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              entityContext: detectedEntity,
+              autoConnect: !!detectedEntity
+          };
+          dispatchAiResponse(infoMsg);
+          
+          if (detectedEntity) {
+            //  setTimeout(() => {
+            //      const agentInfo = getAgentInfo('scenic');
+            //      agentInfo.name = detectedEntity.name;
+            //      agentInfo.description = `${detectedEntity.desc}专属服务`;
+                 
+            //      const cardMsg = {
+            //        id: Date.now() + 2,
+            //        sender: 'agent',
+            //        type: 'service_card',
+            //        node: {
+            //           title: detectedEntity.desc,
+            //           type: 'agent_context',
+            //           details: { name: detectedEntity.name, desc: detectedEntity.desc }
+            //        },
+            //        agentInfo: agentInfo,
+            //        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            //      };
+            //      dispatchAiResponse(cardMsg);
+            //  }, 1000);
+          }
+          return;
+      }
+
+      // 2. Scenic - Guide (Huangguoshu)
+      if (content.includes('导览') || content.includes('讲解')) {
+          const infoMsg = {
+              id: Date.now() + 1,
+              sender: 'agent',
+              type: 'scenic_card',
+              title: '预约导览所需信息',
+              requirements: ['预约时间', '语种需求', '团队人数', '特殊偏好'],
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              entityContext: detectedEntity,
+              autoConnect: !!detectedEntity
+          };
+          dispatchAiResponse(infoMsg);
+
+          if (detectedEntity) {
+            //  setTimeout(() => {
+            //      const agentInfo = getAgentInfo('scenic');
+            //      agentInfo.name = detectedEntity.name;
+            //      agentInfo.description = `${detectedEntity.desc}专属服务`;
+                 
+            //      const cardMsg = {
+            //        id: Date.now() + 2,
+            //        sender: 'agent',
+            //        type: 'service_card',
+            //        node: {
+            //           title: detectedEntity.desc,
+            //           type: 'agent_context',
+            //           details: { name: detectedEntity.name, desc: detectedEntity.desc }
+            //        },
+            //        agentInfo: agentInfo,
+            //        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            //      };
+            //      dispatchAiResponse(cardMsg);
+            //  }, 1000);
+          }
+          return;
+      }
+
+      // 3. Hotel - Booking (Atour)
+      if (content.includes('订房') || content.includes('住宿') || (content.includes('订') && content.includes('酒店'))) {
+          const infoMsg = {
+              id: Date.now() + 1,
+              sender: 'agent',
+              type: 'hotel_card',
+              title: '酒店预订所需信息',
+              requirements: ['入住人姓名', '联系电话', '入住日期', '离店日期', '房型需求'],
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              entityContext: detectedEntity,
+              autoConnect: !!detectedEntity
+          };
+          dispatchAiResponse(infoMsg);
+
+          if (detectedEntity) {
+            //  setTimeout(() => {
+            //      const agentInfo = getAgentInfo('hotel');
+            //      agentInfo.name = detectedEntity.name;
+            //      agentInfo.description = `${detectedEntity.desc}专属服务`;
+                 
+            //      const cardMsg = {
+            //        id: Date.now() + 2,
+            //        sender: 'agent',
+            //        type: 'service_card',
+            //        node: {
+            //           title: detectedEntity.desc,
+            //           type: 'agent_context',
+            //           details: { name: detectedEntity.name, desc: detectedEntity.desc }
+            //        },
+            //        agentInfo: agentInfo,
+            //        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            //      };
+            //      dispatchAiResponse(cardMsg);
+            //  }, 1000);
+          }
+          return;
+      }
+
+      // 4. Transport - Pickup/Charter (Shenzhou)
+      if (content.includes('接机') || content.includes('包车') || content.includes('用车')) {
+          const infoMsg = {
+              id: Date.now() + 1,
+              sender: 'agent',
+              type: 'transport_card',
+              title: '用车预约所需信息',
+              requirements: ['出发时间', '出发地点', '目的地', '乘车人数', '车型要求'],
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              entityContext: detectedEntity,
+              autoConnect: !!detectedEntity
+          };
+          dispatchAiResponse(infoMsg);
+
+          if (detectedEntity) {
+            //  setTimeout(() => {
+            //      const agentInfo = getAgentInfo('transport');
+            //      agentInfo.name = detectedEntity.name;
+            //      agentInfo.description = `${detectedEntity.desc}专属服务`;
+                 
+            //      const cardMsg = {
+            //        id: Date.now() + 2,
+            //        sender: 'agent',
+            //        type: 'service_card',
+            //        node: {
+            //           title: detectedEntity.desc,
+            //           type: 'agent_context',
+            //           details: { name: detectedEntity.name, desc: detectedEntity.desc }
+            //        },
+            //        agentInfo: agentInfo,
+            //        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            //      };
+            //      dispatchAiResponse(cardMsg);
+            //  }, 1000);
+          }
+          return;
+      }
+
+      // 5. Museum - Reservation (Provincial Museum)
+      if (content.includes('预约') || content.includes('展馆')) {
+          const infoMsg = {
+              id: Date.now() + 1,
+              sender: 'agent',
+              type: 'info_card',
+              title: '展馆预约所需信息',
+              requirements: ['参观日期', '入馆时段', '参观人姓名', '身份证号'],
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              entityContext: detectedEntity,
+              autoConnect: !!detectedEntity
+          };
+          dispatchAiResponse(infoMsg);
+
+          if (detectedEntity) {
+            //  setTimeout(() => {
+            //      const agentInfo = getAgentInfo('scenic');
+            //      agentInfo.name = detectedEntity.name;
+            //      agentInfo.description = `${detectedEntity.desc}专属服务`;
+                 
+            //      const cardMsg = {
+            //        id: Date.now() + 2,
+            //        sender: 'agent',
+            //        type: 'service_card',
+            //        node: {
+            //           title: detectedEntity.desc,
+            //           type: 'agent_context',
+            //           details: { name: detectedEntity.name, desc: detectedEntity.desc }
+            //        },
+            //        agentInfo: agentInfo,
+            //        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            //      };
+            //      dispatchAiResponse(cardMsg);
+            //  }, 1000);
+          }
+          return;
+      }
+
+      // 6. Food - Queue/Order (Auntie Wang, Brother Liu)
+      if (content.includes('排队') || content.includes('取号')) {
+          const infoMsg = {
+              id: Date.now() + 1,
+              sender: 'agent',
+              type: 'info_card',
+              title: '餐厅排队所需信息',
+              requirements: ['用餐人数', '联系电话', '预计到店时间', '儿童椅需求'],
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              entityContext: detectedEntity,
+              autoConnect: !!detectedEntity
+          };
+          dispatchAiResponse(infoMsg);
+
+          if (detectedEntity) {
+            //  setTimeout(() => {
+            //      const agentInfo = getAgentInfo('food');
+            //      agentInfo.name = detectedEntity.name;
+            //      agentInfo.description = `${detectedEntity.desc}专属服务`;
+                 
+            //      const cardMsg = {
+            //        id: Date.now() + 2,
+            //        sender: 'agent',
+            //        type: 'service_card',
+            //        node: {
+            //           title: detectedEntity.desc,
+            //           type: 'agent_context',
+            //           details: { name: detectedEntity.name, desc: detectedEntity.desc }
+            //        },
+            //        agentInfo: agentInfo,
+            //        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            //      };
+            //      dispatchAiResponse(cardMsg);
+            //  }, 1000);
+          }
+          return;
+      }
+      
+      if (content.includes('点餐') || content.includes('订座')) {
+          const infoMsg = {
+              id: Date.now() + 1,
+              sender: 'agent',
+              type: 'dining_card',
+              title: '预订座位所需信息',
+              requirements: ['预订人姓名', '联系电话', '用餐时间', '用餐人数', '包间需求'],
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              entityContext: detectedEntity,
+              autoConnect: !!detectedEntity
+          };
+          dispatchAiResponse(infoMsg);
+
+          if (detectedEntity) {
+            //  setTimeout(() => {
+            //      const agentInfo = getAgentInfo('food');
+            //      agentInfo.name = detectedEntity.name;
+            //      agentInfo.description = `${detectedEntity.desc}专属服务`;
+                 
+            //      const cardMsg = {
+            //        id: Date.now() + 2,
+            //        sender: 'agent',
+            //        type: 'service_card',
+            //        node: {
+            //           title: detectedEntity.desc,
+            //           type: 'agent_context',
+            //           details: { name: detectedEntity.name, desc: detectedEntity.desc }
+            //        },
+            //        agentInfo: agentInfo,
+            //        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            //      };
+            //      dispatchAiResponse(cardMsg);
+            //  }, 1000);
+          }
+          return;
+      }
+      
+      // 7. Personal Guide - Charter/Custom (Xiao Zhang)
+      if (content.includes('定制') || content.includes('地陪')) {
+          const infoMsg = {
+              id: Date.now() + 1,
+              sender: 'agent',
+              type: 'scenic_card',
+              title: '定制行程所需信息',
+              requirements: ['游玩天数', '预算范围', '兴趣偏好', '住宿要求', '同行人数'],
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              entityContext: detectedEntity
+          };
+          dispatchAiResponse(infoMsg);
+          return;
+      }
+
+      // Check if user wants to connect to a specific agent context (Auto Connect Logic)
+      if (isConnectRequest || detectedEntity) {
+          let targetAgentType = null;
+          let targetAgentName = '';
+          let targetAgentDesc = '';
+          
+          // Use detectedEntity if available
+          if (detectedEntity) {
+              if (detectedEntity.name.includes('酒店')) targetAgentType = 'hotel';
+              else if (detectedEntity.name.includes('餐饮') || detectedEntity.name.includes('全聚德')) targetAgentType = 'food';
+              else if (detectedEntity.name.includes('车') || detectedEntity.name.includes('交通')) targetAgentType = 'transport';
+              else targetAgentType = 'scenic';
+
+              targetAgentName = detectedEntity.name;
+              targetAgentDesc = detectedEntity.desc;
+          }
+          // Determine agent type based on content or initialContext
+          else if (content.includes('酒店') || content.includes('前台')) {
+              targetAgentType = 'hotel';
+              targetAgentName = '酒店前台智能体';
+              targetAgentDesc = '酒店专属管家';
+          } else if (content.includes('餐厅') || content.includes('餐饮')) {
+              targetAgentType = 'food';
+              targetAgentName = '餐厅服务智能体';
+              targetAgentDesc = '餐厅服务员';
+          } else if (content.includes('景区') || content.includes('导览') || content.includes('讲解')) {
+              targetAgentType = 'scenic';
+              targetAgentName = '景区服务智能体';
+              targetAgentDesc = '金牌讲解员';
+          } else if (content.includes('司机') || content.includes('交通') || content.includes('车')) {
+              targetAgentType = 'transport';
+              targetAgentName = '出行调度智能体';
+              targetAgentDesc = '专属司机';
+          } else if (initialContext && isConnectRequest) {
+             // Fallback to initialContext if available
+             const colorMap = {
+                green: { color: "text-green-800", bgColor: "bg-green-100", iconColor: "text-green-600", headerBg: "bg-green-50", border: "border-green-100", btnBg: "bg-green-600" },
+                indigo: { color: "text-indigo-800", bgColor: "bg-indigo-100", iconColor: "text-indigo-600", headerBg: "bg-indigo-50", border: "border-indigo-100", btnBg: "bg-indigo-600" },
+                blue: { color: "text-blue-800", bgColor: "bg-blue-100", iconColor: "text-blue-600", headerBg: "bg-blue-50", border: "border-blue-100", btnBg: "bg-blue-600" },
+                teal: { color: "text-teal-800", bgColor: "bg-teal-100", iconColor: "text-teal-600", headerBg: "bg-teal-50", border: "border-teal-100", btnBg: "bg-teal-600" },
+                orange: { color: "text-orange-800", bgColor: "bg-orange-100", iconColor: "text-orange-600", headerBg: "bg-orange-50", border: "border-orange-100", btnBg: "bg-orange-600" },
+                purple: { color: "text-purple-800", bgColor: "bg-purple-100", iconColor: "text-purple-600", headerBg: "bg-purple-50", border: "border-purple-100", btnBg: "bg-purple-600" },
+             };
+             const colors = colorMap[initialContext.color] || colorMap.green;
+             
+             const targetAgentInfo = {
+                name: initialContext.name,
+                description: initialContext.intro,
+                tag: initialContext.role,
+                icon: Info, 
+                ...colors,
+                avatar: initialContext.avatar
+             };
+
+             const cardMsg = {
+                 id: Date.now() + 1,
+                 sender: 'agent',
+                 type: 'service_card',
+                 node: {
+                    title: initialContext.desc,
+                    type: 'agent_context',
+                    details: { name: initialContext.name, desc: initialContext.intro }
+                 },
+                 agentInfo: targetAgentInfo,
+                 autoConnect: true, // Trigger auto-connect logic in ServiceAgentCard
+                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+             };
+             dispatchAiResponse(cardMsg);
+             return;
+          }
+
+          if (targetAgentType && isConnectRequest) {
+              const agentInfo = getAgentInfo(targetAgentType);
+              // Override name/desc if we have specific ones
+              if (targetAgentName) agentInfo.name = targetAgentName;
+              
+              const cardMsg = {
+                 id: Date.now() + 1,
+                 sender: 'agent',
+                 type: 'service_card',
+                 node: {
+                    title: targetAgentDesc,
+                    type: 'agent_context',
+                    details: { name: targetAgentName, desc: targetAgentDesc }
+                 },
+                 agentInfo: agentInfo,
+                 autoConnect: true, // Trigger auto-connect logic in ServiceAgentCard
+                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              };
+              dispatchAiResponse(cardMsg);
+              return;
+          }
+      }
+
       if (activeAgent) {
          if (activeAgent.name.includes('景区')) {
             aiText = `【${activeAgent.name}】为您服务：收到您的需求！作为您的专属导游，我建议您可以错峰游览，避开人流高峰。还需要为您介绍具体的游玩路线吗？`;
@@ -265,7 +1341,7 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
         text: aiText,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-      setMessages(prev => [...prev, aiMsg]);
+      dispatchAiResponse(aiMsg);
 
       if (!activeAgent) {
           setTimeout(() => {
@@ -275,7 +1351,7 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
               type: 'itinerary',
               time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
-            setMessages(prev => [...prev, cardMsg]);
+            dispatchAiResponse(cardMsg);
           }, 600);
       }
     }, 1500);
@@ -301,7 +1377,7 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
         </button>
         <div className="flex-1">
           <h1 className={`text-lg font-bold ${activeAgent ? activeAgent.color : "text-slate-800"}`}>
-            {activeAgent ? activeAgent.name : '行程规划助手'}
+            {activeAgent ? activeAgent.name : '黄小西'}
           </h1>
           <div className="flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full animate-pulse ${activeAgent ? 'bg-green-600' : 'bg-green-500'}`} />
@@ -323,14 +1399,18 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
             className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
           >
             {/* Avatar */}
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 ${
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 overflow-hidden ${
               msg.sender === 'agent' 
                 ? (activeAgent ? `${activeAgent.bgColor} ${activeAgent.border}` : 'bg-cyan-100 border-white')
                 : 'bg-slate-200 border-white'
             }`}>
               {msg.sender === 'agent' ? (
                 activeAgent ? (
-                  <activeAgent.icon size={20} className={activeAgent.iconColor} />
+                  activeAgent.avatar ? (
+                    <img src={activeAgent.avatar} alt={activeAgent.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <activeAgent.icon size={20} className={activeAgent.iconColor} />
+                  )
                 ) : (
                   <img src={TuoSaiImage} alt="Agent" className="w-full h-full object-contain" />
                 )
@@ -343,14 +1423,20 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
             <div className={`max-w-[85%] space-y-1 ${msg.sender === 'user' ? 'items-end flex flex-col' : ''}`}>
               {msg.type === 'itinerary' ? (
                 <div className="w-full min-w-[300px]">
-                  <ItineraryCard onAdopt={handleAdopt} tripData={currentTrip} />
+                  <ItineraryCard onAdopt={handleAdopt} tripData={currentTrip} onViewImage={setViewingImage} />
                 </div>
               ) : msg.type === 'service_card' ? (
                 <div className="w-full min-w-[300px]">
                    <ServiceAgentCard 
                      node={msg.node} 
                      agentInfo={msg.agentInfo} 
+                     autoConnect={msg.autoConnect}
                      onConnect={() => {
+                        // Notify App to open workspace (Split View)
+                        if (onConnectAgent) {
+                            onConnectAgent(msg.agentInfo);
+                        }
+
                         setTimeout(() => {
                           const connectedMsg = {
                              id: Date.now(),
@@ -437,6 +1523,62 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
                      }}
                    />
                 </div>
+              ) : msg.type === 'info_card' ? (
+                <div className="w-full min-w-[260px]">
+                    <InfoRequirementCard 
+                        title={msg.title} 
+                        requirements={msg.requirements} 
+                        onSubmit={(data) => handleServiceCompletion(msg.title, data, msg.entityContext)}
+                    />
+                </div>
+              ) : msg.type === 'hotel_card' ? (
+                <div className="w-full min-w-[300px]">
+                    <HotelServiceCard 
+                        title={msg.title} 
+                        requirements={msg.requirements} 
+                        onViewImage={setViewingImage}
+                        onSubmit={(data) => handleServiceCompletion(msg.title, data, msg.entityContext)}
+                    />
+                </div>
+              ) : msg.type === 'dining_card' ? (
+                <div className="w-full min-w-[300px]">
+                    <DiningServiceCard 
+                        title={msg.title} 
+                        requirements={msg.requirements} 
+                        onViewImage={setViewingImage}
+                        onSubmit={(data) => handleServiceCompletion(msg.title, data, msg.entityContext)}
+                    />
+                </div>
+              ) : msg.type === 'scenic_card' ? (
+                <div className="w-full min-w-[300px]">
+                    <ScenicServiceCard 
+                        title={msg.title} 
+                        requirements={msg.requirements} 
+                        onViewImage={setViewingImage}
+                        onSubmit={(data) => handleServiceCompletion(msg.title, data, msg.entityContext)}
+                    />
+                </div>
+              ) : msg.type === 'transport_card' ? (
+                <div className="w-full min-w-[300px]">
+                    <TransportServiceCard 
+                        title={msg.title} 
+                        requirements={msg.requirements} 
+                        onViewImage={setViewingImage}
+                        onSubmit={(data) => handleServiceCompletion(msg.title, data, msg.entityContext)}
+                    />
+                </div>
+              ) : msg.type === 'chips' ? (
+                <div className="flex flex-wrap gap-2 my-1">
+                  {msg.chips.map((chip, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSend(chip)}
+                      className="px-3 py-1.5 bg-white text-cyan-600 text-xs font-bold rounded-full border border-cyan-100 shadow-sm active:scale-95 transition-transform hover:bg-cyan-50"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
               ) : (
                 <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
                   msg.sender === 'user' 
@@ -457,11 +1599,15 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
             animate={{ opacity: 1 }}
             className="flex gap-3"
           >
-             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 ${
+             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 overflow-hidden ${
                activeAgent ? `${activeAgent.bgColor} ${activeAgent.border}` : 'bg-cyan-100 border-white'
              }`}>
                 {activeAgent ? (
-                   <activeAgent.icon size={20} className={activeAgent.iconColor} />
+                   activeAgent.avatar ? (
+                     <img src={activeAgent.avatar} alt={activeAgent.name} className="w-full h-full object-cover" />
+                   ) : (
+                     <activeAgent.icon size={20} className={activeAgent.iconColor} />
+                   )
                 ) : (
                    <img src={TuoSaiImage} alt="Agent" className="w-full h-full object-contain" />
                 )}
@@ -475,6 +1621,12 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
         )}
 
       </div>
+
+      <AnimatePresence>
+        {viewingImage && (
+          <ImageViewer imageUrl={viewingImage} onClose={() => setViewingImage(null)} />
+        )}
+      </AnimatePresence>
 
       {/* Input Area */}
       <motion.div 
@@ -506,7 +1658,7 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext }) =>
   );
 };
 
-const ItineraryCard = ({ onAdopt, tripData }) => {
+const ItineraryCard = ({ onAdopt, tripData, onViewImage }) => {
   const [activeDay, setActiveDay] = useState(1);
   const [isBudgetExpanded, setIsBudgetExpanded] = useState(false);
   const [isAdopted, setIsAdopted] = useState(false);
@@ -594,8 +1746,14 @@ const ItineraryCard = ({ onAdopt, tripData }) => {
                   <div className="mt-2 text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
                      {item.details.desc || item.details.name}
                      {item.image && (
-                        <div className="mt-2 w-full h-32 rounded-lg overflow-hidden">
+                        <div 
+                            className="mt-2 w-full h-32 rounded-lg overflow-hidden group relative cursor-pointer"
+                            onClick={() => onViewImage && onViewImage(item.image)}
+                        >
                            <img src={item.image} alt="" className="w-full h-full object-cover" />
+                           <div className="absolute top-2 right-2 bg-black/30 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                <ZoomIn size={14} className="text-white" />
+                           </div>
                         </div>
                      )}
                      
@@ -712,8 +1870,19 @@ const TimelineItem = ({ time, icon, iconBg, title, children }) => (
   </div>
 );
 
-const ServiceAgentCard = ({ node, agentInfo, onConnect }) => {
-  const [status, setStatus] = useState('idle'); // idle, connecting, connected
+const ServiceAgentCard = ({ node, agentInfo, onConnect, autoConnect }) => {
+  const [status, setStatus] = useState(autoConnect ? 'connecting' : 'idle'); // idle, connecting, connected
+  const hasConnected = useRef(false);
+
+  useEffect(() => {
+    if (autoConnect && status === 'connecting' && !hasConnected.current) {
+        hasConnected.current = true;
+        onConnect();
+        setTimeout(() => {
+            setStatus('connected');
+        }, 1500);
+    }
+  }, [autoConnect, status, onConnect]);
 
   const handleConnect = () => {
     if (status !== 'idle') return;
@@ -729,8 +1898,12 @@ const ServiceAgentCard = ({ node, agentInfo, onConnect }) => {
     <div className={`bg-white rounded-2xl overflow-hidden shadow-md border ${agentInfo.border}`}>
        {/* Header */}
        <div className={`${agentInfo.headerBg} p-4 flex items-center gap-3 border-b ${agentInfo.border}`}>
-         <div className={`w-10 h-10 rounded-full ${agentInfo.bgColor} flex items-center justify-center shrink-0`}>
-           <agentInfo.icon size={20} className={agentInfo.iconColor} />
+         <div className={`w-10 h-10 rounded-full ${agentInfo.bgColor} flex items-center justify-center shrink-0 overflow-hidden`}>
+           {agentInfo.avatar ? (
+             <img src={agentInfo.avatar} alt={agentInfo.name} className="w-full h-full object-cover" />
+           ) : (
+             <agentInfo.icon size={20} className={agentInfo.iconColor} />
+           )}
          </div>
          <div className="flex-1">
            <h3 className={`font-bold text-sm ${agentInfo.color}`}>{agentInfo.name}</h3>

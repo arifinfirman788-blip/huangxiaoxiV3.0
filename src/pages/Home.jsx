@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, User, ChevronDown, MessageCircle, Star, Coffee, Building, Landmark, Mic, Plus, Home as HomeIcon, Compass, UserCircle, X, Check, Bell, Languages, Volume2, ArrowUpRight, Plane, Clock, Sparkles, Camera, Car, Play, Calendar as CalendarIcon, Ticket, Hotel, Utensils } from 'lucide-react';
+import { Search, MapPin, User, ChevronDown, MessageCircle, Star, Coffee, Building, Landmark, Mic, Plus, Home as HomeIcon, Compass, UserCircle, X, Check, Bell, Languages, Volume2, ArrowUpRight, Plane, Clock, Sparkles, Camera, Car, Play, Calendar as CalendarIcon, Ticket, Hotel, Utensils, RefreshCcw, ArrowRight } from 'lucide-react';
 import { categories } from '../data/agents';
 import TuoSaiImage from '../image/托腮_1.png';
 import FlipCountdown from '../components/FlipCountdown';
 import ChatInterface from '../components/ChatInterface';
 import { getPlaceholder } from '../utils/imageUtils';
+
+// Import cropped avatars
+import PeasantAvatar from '../image/avatars/peasant.png';
+import KnightAvatar from '../image/avatars/knight.png';
+import MageAvatar from '../image/avatars/mage.png';
+import ThreeAgentsImage from '../image/fJOIb6mhE.jpeg';
+import MuseumAvatar from '../image/bowuguan.png';
+import WangAyiAvatar from '../image/wangayi.png';
+import LiuDaGeAvatar from '../image/liudage.png';
+import HotelAvatar from '../image/jiudian.png';
+import GuideAvatar from '../image/daoyou.png';
+import CarAvatar from '../image/zhuanche.png';
+import ScenicAvatar from '../image/huangguoshu.png';
 
 const iconMap = {
   Landmark: Landmark,
@@ -131,13 +144,14 @@ const NewsMarquee = () => {
   );
 };
 
-const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) => {
+const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav, onServiceSubmit, onConnectAgent, agentFeedback, merchantMessage, onUserMessage, isHumanMode }) => {
   const [activeRole, setActiveRole] = useState('黄小西');
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
   const [tempStartDate, setTempStartDate] = useState('');
   const [forceUpdate, setForceUpdate] = useState(0); // Add forceUpdate state
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInitialContext, setChatInitialContext] = useState(null);
   const navigate = useNavigate();
 
   // Navigation wrapper to check auth
@@ -149,7 +163,8 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
     }
   };
 
-  const handleOpenChat = () => {
+  const handleOpenChat = (context = null) => {
+    setChatInitialContext(context);
     setIsChatOpen(true);
     if (toggleBottomNav) toggleBottomNav(false);
   };
@@ -276,16 +291,11 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full mb-8 h-[240px] grid grid-cols-9 gap-3"
+            className="w-full mb-8 h-[160px]"
           >
-            {/* Left: Location-based Agents List (5/9 width) */}
-            <div className="col-span-5 h-full">
+            {/* Full Width Agent Recommendation Widget */}
+            <div className="h-full">
                <AgentListWidget handleOpenChat={handleOpenChat} />
-            </div>
-
-            {/* Right: B-Side Promo Carousel (4/9 width) */}
-            <div className="col-span-4 h-full">
-               <PromoCarouselWidget />
             </div>
           </motion.div>
         </div>
@@ -399,10 +409,17 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
         {isChatOpen && (
            <ChatInterface 
               onClose={handleCloseChat}
+              initialContext={chatInitialContext}
               onAdoptTrip={(trip) => {
                  onUpdateTrip(trip);
                  handleCloseChat();
               }}
+              onServiceSubmit={onServiceSubmit}
+              onConnectAgent={onConnectAgent}
+              agentFeedback={agentFeedback}
+              merchantMessage={merchantMessage}
+              onUserMessage={onUserMessage}
+              isHumanMode={isHumanMode}
            />
         )}
       </AnimatePresence>
@@ -410,103 +427,232 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
   );
 };
 
-const AgentListWidget = ({ handleOpenChat }) => (
-  <div className="bg-white rounded-[2rem] p-4 shadow-lg border border-slate-100 h-full flex flex-col overflow-hidden">
-    <div className="flex items-center justify-between mb-3 px-1 shrink-0">
-      <div className="flex items-center gap-1.5">
-        <div className="w-6 h-6 rounded-full bg-cyan-100 flex items-center justify-center">
-          <MapPin size={12} className="text-cyan-600" />
+const AgentListWidget = ({ handleOpenChat }) => {
+  const [displayedAgents, setDisplayedAgents] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const allAgents = [
+    { 
+      name: "景区向导", 
+      role: "景区", 
+      services: ["导览", "购票"],
+      color: "green", 
+      avatar: ScenicAvatar,
+      desc: "黄果树瀑布",
+      type: "enterprise",
+      intro: "作为黄果树景区的官方数字大使，我承载着传播喀斯特自然美学的使命。致力于为您提供最权威的景观解读与最贴心的游览指引，让世界看见贵州山水的波澜壮阔。"
+    },
+    { 
+      name: "酒店管家", 
+      role: "酒店", 
+      services: ["订房", "导航"],
+      color: "indigo", 
+      avatar: HotelAvatar,
+      desc: "亚朵酒店",
+      type: "enterprise",
+      intro: "传承亚朵“温暖、人文、邻里”的企业文化，我们不仅仅提供住宿，更致力于打造旅途中的精神休憩空间。以标准化的极致服务，为您呈现触手可及的温暖与关怀。"
+    },
+    { 
+      name: "交通调度", 
+      role: "交通", 
+      services: ["接机", "包车"],
+      color: "blue", 
+      avatar: CarAvatar,
+      desc: "小车小团",
+      type: "enterprise",
+      intro: "严格遵循企业级安全运营标准，我们的车队代表着行业标杆。以准时、专业、规范的服务流程，为您每一次的出行保驾护航，传递安全至上的企业价值观。"
+    },
+    {
+      name: "金牌地陪",
+      role: "地陪",
+      services: ["包车", "定制"],
+      color: "teal", 
+      avatar: GuideAvatar,
+      desc: "地陪小张",
+      type: "personal",
+      intro: "我是主理人小张，一个不爱走寻常路的贵州土著。拒绝千篇一律的打卡，我将用我的私人视角，带您深入那些只有本地人才知道的隐秘角落，体验最纯粹的在地生活。"
+    },
+    {
+      name: "美食店长",
+      role: "餐饮",
+      services: ["排队", "点餐"],
+      color: "orange", 
+      avatar: WangAyiAvatar,
+      desc: "王阿姨辣子鸡",
+      type: "personal",
+      intro: "我是王阿姨，这家店就是我的名片。三十年来，我坚持亲自选材、亲自掌勺，只为了守住记忆中的老味道。在这里，您吃到的每一口辣子鸡，都是我个人品牌的信誉保证。"
+    },
+    {
+      name: "美食店长",
+      role: "餐饮",
+      services: ["排队", "点餐"],
+      color: "orange", 
+      avatar: LiuDaGeAvatar,
+      desc: "刘大哥烤鱼",
+      type: "personal",
+      intro: "我是老刘，烤鱼不仅是我的生意，更是我的作品。从选鱼到炭火的把控，我都亲力亲为。欢迎来到我的美食江湖，感受我对烧烤艺术的独特理解与执着追求。"
+    },
+    {
+      name: "展馆讲解",
+      role: "展馆",
+      services: ["预约", "讲解"],
+      color: "purple", 
+      avatar: MuseumAvatar,
+      desc: "贵州省博物馆",
+      type: "enterprise",
+      intro: "肩负着守护与传承贵州历史文化的重任，作为官方智能讲解员，我将带您穿越时光长河，感受每一件文物背后的文明脉动，弘扬中华优秀传统文化。"
+    }
+  ];
+
+  useEffect(() => {
+    // Show current agent
+    setDisplayedAgents([allAgents[currentIndex]]);
+  }, [currentIndex]);
+
+  const handleRefresh = (e) => {
+    e.stopPropagation();
+    setCurrentIndex(prev => (prev + 1) % allAgents.length);
+    setRefreshKey(prev => prev + 1);
+  };
+
+
+  return (
+  <div className="bg-white rounded-[2rem] p-3 shadow-lg border border-slate-100 h-full flex flex-col overflow-hidden">
+    <div className="flex items-center justify-between mb-0.5 px-1 shrink-0">
+      <div className="flex items-center gap-1">
+        <div className="w-5 h-5 rounded-full bg-cyan-100 flex items-center justify-center">
+          <MapPin size={10} className="text-cyan-600" />
         </div>
-        <h3 className="text-sm font-bold text-slate-800">附近智能体</h3>
+        <h3 className="text-xs font-bold text-slate-800">为您推荐</h3>
       </div>
-      <span className="text-[9px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full">贵阳</span>
+      <button onClick={handleRefresh} className="flex items-center gap-0.5 text-[9px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full hover:bg-slate-100 transition-colors whitespace-nowrap">
+        <RefreshCcw size={8} />
+        换
+      </button>
     </div>
     
-    <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 pr-1">
-      {[
-        { 
-          name: "黄果树·小向导", 
-          role: "景区", 
-          services: ["导览", "购票"],
-          color: "purple", 
-          avatar: getPlaceholder(100, 100, 'Guide')
-        },
-        { 
-          name: "凯宾斯基·管家", 
-          role: "酒店", 
-          services: ["预订", "客房"],
-          color: "indigo", 
-          avatar: getPlaceholder(100, 100, 'Butler')
-        },
-        { 
-          name: "老凯里·店长", 
-          role: "餐饮", 
-          services: ["排队", "点餐"],
-          color: "orange", 
-          avatar: getPlaceholder(100, 100, 'Chef')
-        },
-        { 
-          name: "神州专车·调度", 
-          role: "交通", 
-          services: ["接机", "包车"],
-          color: "green", 
-          avatar: getPlaceholder(100, 100, 'Driver')
-        }
-      ].map((agent, i) => (
-        <div 
-          key={i} 
-          className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 active:scale-95 transition-all cursor-pointer group"
-          onClick={handleOpenChat}
+    <div className="flex-1 flex items-center justify-center pt-1 px-1">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={refreshKey}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+          className="w-full h-full"
         >
-          <div className="relative shrink-0">
-             <img src={agent.avatar} alt={agent.name} className="w-10 h-10 rounded-full border border-slate-100 object-cover" />
-             <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-${agent.color}-100 border border-white flex items-center justify-center`}>
-                <Sparkles size={8} className={`text-${agent.color}-600`} />
-             </div>
-          </div>
-          <div className="flex-1 min-w-0">
-             <div className="flex items-center gap-1.5 mb-0.5">
-                <h4 className="font-bold text-slate-800 text-xs truncate">{agent.name}</h4>
-             </div>
-             <div className="flex gap-1">
-                {agent.services.map((tag, idx) => (
-                   <span key={idx} className="text-[9px] text-slate-400 bg-slate-50 px-1 py-0.5 rounded-md leading-none border border-slate-100 group-hover:bg-white group-hover:border-slate-200 transition-colors">
-                      {tag}
-                   </span>
-                ))}
-             </div>
-          </div>
-        </div>
-      ))}
+          {displayedAgents.map((agent, i) => (
+            <div 
+              key={i} 
+              className="flex items-center h-full cursor-pointer group relative overflow-visible gap-3"
+              onClick={() => handleOpenChat(agent)}
+            >
+              {/* Large Avatar - Left Side */}
+              <div className="w-[120px] h-full relative flex items-center justify-center rounded-xl overflow-hidden shrink-0">
+                 <img 
+                    src={agent.avatar} 
+                    alt={agent.name} 
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" 
+                    style={{ 
+                      objectPosition: agent.objectPosition || 'center top',
+                      transform: agent.scale ? `scale(${agent.scale})` : undefined
+                    }}
+                 />
+                 {/* Decorative Overlay Gradient */}
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white/10 opacity-80" />
+              </div>
+
+              {/* Info Section - Right Side */}
+              <div className="flex-1 flex flex-col items-start justify-center gap-1.5 relative z-20 h-full py-1">
+                 <div className="text-left w-full">
+                    <div className="flex items-center gap-2 mb-0.5">
+                       <h4 className="font-bold text-slate-800 text-lg truncate leading-tight">{agent.desc}</h4>
+                       <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold border whitespace-nowrap ${
+                         agent.type === 'enterprise' 
+                           ? 'bg-blue-50 text-blue-600 border-blue-100' 
+                           : 'bg-orange-50 text-orange-600 border-orange-100'
+                       }`}>
+                         {agent.type === 'enterprise' ? '企业' : '个人'}
+                       </span>
+                    </div>
+                    <span className="text-xs text-slate-500 font-medium truncate flex items-center gap-1">
+                      {agent.name}
+                      <span className={`w-1.5 h-1.5 rounded-full bg-${agent.color}-500 inline-block`} />
+                    </span>
+                 </div>
+                 
+                 <div className="flex flex-wrap justify-start gap-1.5 w-full">
+                    {agent.services.map((tag, idx) => (
+                       <span key={idx} className="text-[10px] text-slate-500 bg-slate-50 px-2 py-1 rounded-lg leading-tight border border-slate-100 shadow-sm whitespace-nowrap">
+                          {tag}
+                       </span>
+                    ))}
+                 </div>
+                 
+                 <div className="mt-auto w-full pt-1">
+                    <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">
+                      {agent.intro || `我是您的专属${agent.role}助手，随时为您提供专业的服务与建议。`}
+                    </p>
+                  </div>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+
+    {/* Footer Link */}
+    <div className="mt-1 pt-1 border-t border-slate-50 shrink-0">
+      <button className="w-full py-1.5 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-100 hover:border-cyan-100 hover:from-cyan-50 hover:to-white flex items-center justify-center gap-1 group transition-all duration-300 shadow-sm active:scale-95">
+        <span className="text-[10px] font-bold text-slate-500 group-hover:text-cyan-600 transition-colors">前往智能体广场</span>
+        <ArrowRight size={10} className="text-slate-300 group-hover:text-cyan-500 group-hover:translate-x-0.5 transition-transform" />
+      </button>
     </div>
   </div>
-);
+  );
+};
 
 const PromoCarouselWidget = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const promos = [
-    { title: "景区联票特惠", desc: "立省 ¥50", color: "bg-orange-500", icon: Ticket },
-    { title: "酒店连住礼遇", desc: "行政酒廊", color: "bg-indigo-500", icon: Hotel },
-    { title: "特色美食套餐", desc: "8.8折起", color: "bg-red-500", icon: Utensils }
+    { 
+      title: "亚朵酒店·早餐券", 
+      desc: "住客专享 ¥38", 
+      image: "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=800&auto=format&fit=crop",
+      tag: "限时抢"
+    },
+    { 
+      title: "老凯里·酸汤鱼", 
+      desc: "100元代金券", 
+      image: "https://images.unsplash.com/photo-1534939561126-855b8675edd7?q=80&w=800&auto=format&fit=crop",
+      tag: "8.5折"
+    },
+    { 
+      title: "黄果树·VIP通道", 
+      desc: "免排队入园", 
+      image: "https://images.unsplash.com/photo-1433838552652-f9a46b332c40?q=80&w=800&auto=format&fit=crop",
+      tag: "热门"
+    }
   ];
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % promos.length);
-    }, 3000);
+    }, 4000);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="bg-white rounded-[2rem] p-4 shadow-lg border border-slate-100 h-full flex flex-col relative overflow-hidden">
-       <div className="flex items-center justify-between mb-3 px-1 relative z-10">
-          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-             <Sparkles size={12} className="text-yellow-500" />
+    <div className="bg-white rounded-[2rem] p-3 shadow-lg border border-slate-100 h-full flex flex-col relative overflow-hidden">
+       <div className="flex items-center justify-between mb-1.5 px-1 relative z-10 shrink-0">
+          <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1">
+             <Sparkles size={10} className="text-yellow-500" />
              特惠服务
           </h3>
        </div>
        
-       <div className="flex-1 relative rounded-2xl overflow-hidden">
+       <div className="flex-1 relative rounded-xl overflow-hidden min-h-0 group cursor-pointer">
           <AnimatePresence mode="wait">
              <motion.div
                key={currentIndex}
@@ -514,22 +660,33 @@ const PromoCarouselWidget = () => {
                animate={{ opacity: 1, scale: 1 }}
                exit={{ opacity: 0 }}
                transition={{ duration: 0.5 }}
-               className={`absolute inset-0 ${promos[currentIndex].color} flex flex-col items-center justify-center text-white p-4 text-center`}
+               className="absolute inset-0"
              >
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mb-2 backdrop-blur-sm">
-                   {React.createElement(promos[currentIndex].icon, { size: 20, className: "text-white" })}
+                <img 
+                  src={promos[currentIndex].image} 
+                  alt={promos[currentIndex].title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                
+                <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                   <div className="flex items-start justify-between mb-0.5">
+                      <h4 className="font-bold text-xs leading-tight shadow-sm">{promos[currentIndex].title}</h4>
+                      <span className="text-[8px] font-bold bg-yellow-500 text-yellow-950 px-1.5 py-0.5 rounded-full shadow-sm whitespace-nowrap shrink-0">
+                        {promos[currentIndex].tag}
+                      </span>
+                   </div>
+                   <p className="text-[9px] opacity-90 font-medium text-slate-200">{promos[currentIndex].desc}</p>
                 </div>
-                <h4 className="font-bold text-sm mb-1">{promos[currentIndex].title}</h4>
-                <p className="text-xs opacity-90 font-medium bg-white/20 px-2 py-0.5 rounded-full">{promos[currentIndex].desc}</p>
              </motion.div>
           </AnimatePresence>
           
           {/* Indicators */}
-          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1 z-10">
+          <div className="absolute top-2 right-2 flex gap-0.5 z-10">
              {promos.map((_, i) => (
                 <div 
                   key={i} 
-                  className={`w-1 h-1 rounded-full transition-all ${i === currentIndex ? 'bg-white w-3' : 'bg-white/50'}`} 
+                  className={`w-1 h-1 rounded-full transition-all shadow-sm ${i === currentIndex ? 'bg-white w-2.5' : 'bg-white/40'}`} 
                 />
              ))}
           </div>
