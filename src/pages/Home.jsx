@@ -5,6 +5,7 @@ import { Search, MapPin, User, ChevronDown, MessageCircle, Star, Coffee, Buildin
 import { categories } from '../data/agents';
 import TuoSaiImage from '../image/托腮_1.png';
 import FlipCountdown from '../components/FlipCountdown';
+import ChatInterface from '../components/ChatInterface';
 
 const iconMap = {
   Landmark: Landmark,
@@ -135,6 +136,7 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
   const [tempStartDate, setTempStartDate] = useState('');
   const [forceUpdate, setForceUpdate] = useState(0); // Add forceUpdate state
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const navigate = useNavigate();
 
   // Navigation wrapper to check auth
@@ -144,6 +146,10 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
     } else {
       navigate(path);
     }
+  };
+
+  const handleOpenChat = () => {
+    setIsChatOpen(true);
   };
 
   const handleStartTrip = () => {
@@ -203,8 +209,7 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
               </div>
 
               <motion.div 
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                layoutId="chat-container"
                 className="bg-white/40 backdrop-blur-xl border border-white/60 p-5 rounded-blob-1 shadow-float relative z-10 overflow-visible flex flex-col items-center text-center"
               >
                 <TypewriterText />
@@ -222,7 +227,7 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
                         <motion.button 
                           key={index}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => handleNav('/chat-planning')}
+                          onClick={handleOpenChat}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm border border-slate-100 text-slate-600 whitespace-nowrap"
                         >
                           <agent.icon size={14} className="text-cyan-500" />
@@ -234,8 +239,10 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
   
                   {/* Integrated Chat Input Area */}
                   <div className="w-full relative">
-                    <div className="bg-white rounded-[2rem] p-3 pr-4 shadow-lg flex items-center gap-2 border border-slate-100 cursor-pointer hover:shadow-xl transition-shadow"
-                         onClick={() => handleNav('/chat-planning')}
+                    <motion.div 
+                         layoutId="input-container"
+                         className="bg-white rounded-[2rem] p-3 pr-4 shadow-lg flex items-center gap-2 border border-slate-100 cursor-pointer hover:shadow-xl transition-shadow"
+                         onClick={handleOpenChat}
                     >
                       <input 
                         type="text" 
@@ -247,7 +254,7 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
                       <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0">
                         <ArrowUpRight size={18} />
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
                 </div>
               </motion.div>
@@ -545,6 +552,18 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isChatOpen && (
+           <ChatInterface 
+              onClose={() => setIsChatOpen(false)} 
+              onAdoptTrip={(trip) => {
+                 onUpdateTrip(trip);
+                 setIsChatOpen(false);
+              }}
+           />
         )}
       </AnimatePresence>
     </div>
