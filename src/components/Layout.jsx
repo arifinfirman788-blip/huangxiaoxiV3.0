@@ -1,8 +1,9 @@
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import BottomNav from './BottomNav';
 
-const Layout = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
+const Layout = ({ onAdoptTrip, isAuthenticated, hasTrip, isBottomNavVisible = true }) => {
   const location = useLocation();
   const showBottomNav = ['/', '/trip', '/shop', '/message', '/profile'].includes(location.pathname);
 
@@ -20,7 +21,19 @@ const Layout = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
       </div>
 
       {/* Bottom Navigation */}
-      {showBottomNav && <BottomNav onAdoptTrip={onAdoptTrip} isAuthenticated={isAuthenticated} hasTrip={hasTrip} />}
+      <AnimatePresence>
+        {showBottomNav && isBottomNavVisible && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="absolute bottom-0 left-0 right-0 z-40"
+          >
+            <BottomNav onAdoptTrip={onAdoptTrip} isAuthenticated={isAuthenticated} hasTrip={hasTrip} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

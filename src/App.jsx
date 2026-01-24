@@ -52,6 +52,7 @@ function App() {
   };
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
 
   const handleLogin = () => {
     setIsAuthenticated(true);
@@ -97,8 +98,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           
-          <Route element={<Layout onAdoptTrip={handleAdoptTrip} isAuthenticated={isAuthenticated} hasTrip={!!adoptedTrip} />}>
-            <Route path="/" element={<Home adoptedTrip={adoptedTrip} onUpdateTrip={handleUpdateTrip} isAuthenticated={isAuthenticated} />} />
+          <Route element={<Layout onAdoptTrip={handleAdoptTrip} isAuthenticated={isAuthenticated} hasTrip={!!adoptedTrip} isBottomNavVisible={isBottomNavVisible} />}>
+            <Route path="/" element={<Home adoptedTrip={adoptedTrip} onUpdateTrip={handleUpdateTrip} isAuthenticated={isAuthenticated} toggleBottomNav={setIsBottomNavVisible} />} />
             <Route path="/trip" element={
               <RequireAuth isAuthenticated={isAuthenticated}>
                 <Trip adoptedTrip={adoptedTrip} onUpdateTrip={handleUpdateTrip} />

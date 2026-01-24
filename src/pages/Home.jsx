@@ -130,7 +130,7 @@ const NewsMarquee = () => {
   );
 };
 
-const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
+const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) => {
   const [activeRole, setActiveRole] = useState('黄小西');
   const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
@@ -150,6 +150,12 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
 
   const handleOpenChat = () => {
     setIsChatOpen(true);
+    if (toggleBottomNav) toggleBottomNav(false);
+  };
+
+  const handleCloseChat = () => {
+    setIsChatOpen(false);
+    if (toggleBottomNav) toggleBottomNav(true);
   };
 
   const handleStartTrip = () => {
@@ -558,10 +564,10 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip }) => {
       <AnimatePresence>
         {isChatOpen && (
            <ChatInterface 
-              onClose={() => setIsChatOpen(false)} 
+              onClose={handleCloseChat}
               onAdoptTrip={(trip) => {
                  onUpdateTrip(trip);
-                 setIsChatOpen(false);
+                 handleCloseChat();
               }}
            />
         )}
