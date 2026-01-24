@@ -276,188 +276,17 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full bg-white/80 backdrop-blur-xl rounded-[1.5rem] p-4 mb-8 border border-white shadow-lg shadow-slate-200/50 min-h-[90px] flex flex-col justify-center relative overflow-hidden group transition-all"
+            className="w-full mb-8 h-[240px] grid grid-cols-9 gap-3"
           >
-            {/* Decorative gradient blob */}
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-gradient-to-br from-cyan-100/50 to-blue-100/50 blur-2xl rounded-full opacity-60 pointer-events-none" />
+            {/* Left: Location-based Agents List (5/9 width) */}
+            <div className="col-span-5 h-full">
+               <AgentListWidget handleOpenChat={handleOpenChat} />
+            </div>
 
-            {adoptedTrip && adoptedTrip.status !== 'completed' ? (() => {
-               // 1. If trip has no start time, show Trip Ready Message (No Start Button)
-               if (!adoptedTrip.startTime) {
-                 return (
-                   <div 
-                     className="flex items-center justify-between w-full relative z-10 cursor-pointer"
-                     onClick={() => handleNav('/trip')}
-                   >
-                     <div className="flex items-center gap-3">
-                       <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600">
-                         <Play size={24} fill="currentColor" />
-                       </div>
-                       <div>
-                         <h3 className="font-bold text-slate-800">行程已就绪</h3>
-                         <p className="text-xs text-slate-500">前往行程页管理或开启您的旅程</p>
-                       </div>
-                     </div>
-                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                       <ArrowUpRight size={16} />
-                     </div>
-                   </div>
-                 );
-               }
-
-               // 2. If trip has start time, check if it's in the future
-               const startTime = new Date(adoptedTrip.startTime);
-               const now = new Date();
-               
-               if (startTime > now && adoptedTrip.status !== 'completed') {
-                 return (
-                   <div className="w-full relative z-10">
-                     <div className="flex justify-between items-center mb-3">
-                       <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                         <Clock size={14} className="text-cyan-500" />
-                         距离行程开始还有
-                       </h3>
-                       <span className="text-[10px] text-slate-400">
-                         {startTime.toLocaleDateString()} {startTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                       </span>
-                     </div>
-                     <FlipCountdown 
-                       targetDate={startTime} 
-                       onComplete={() => setForceUpdate(prev => prev + 1)} // Force re-render when timer ends
-                     />
-                   </div>
-                 );
-               }
-
-               // 3. If trip has started or completed
-               // If completed, check logic
-               if (adoptedTrip.status === 'completed') {
-                   // Fallback to recommendations if completed? Or show "Completed" state?
-                   // User requirement: "当没有行程时展示推荐内容" -> If completed, maybe treat as no active trip?
-                   // But let's check if we should fall through to "No Trip" block.
-                   // Current logic structure is: if (adoptedTrip) { ... } else { Recommendations }
-                   // So if completed, we return null here to let it render recommendations?
-                   // Or render a "Trip Completed" card.
-                   // User said: "terminate... stop trip reminder". This implies reverting to recommendations or "No active trip" state.
-                   // Let's render null here so we can modify the outer condition or just return recommendations here.
-                   return null; 
-               }
-
-               // If trip started (startTime <= now) and not completed, show Next Node (Original Interaction)
-               // Flatten all timeline nodes from all days
-               const allNodes = adoptedTrip.itinerary?.flatMap(day => day.timeline) || [];
-               // Find next upcoming node
-               const nextNode = allNodes.find(n => n.status === 'upcoming' || n.status === 'planned') || allNodes[0];
-               
-               return (
-                 <div onClick={() => handleNav(`/trip/${adoptedTrip.id}`)} className="cursor-pointer">
-                   <div className="relative z-10 w-full flex items-center gap-3">
-                     {/* Left: Integrated AI Reminder */}
-                     <div className="w-24 bg-orange-50/50 rounded-xl p-2 border border-orange-100/50 flex flex-col justify-center gap-1 shrink-0 h-full">
-                        <div className="flex items-center gap-1 text-orange-600">
-                           <Sparkles size={10} className="shrink-0" />
-                           <span className="text-[10px] font-bold">黄小西</span>
-                        </div>
-                        <p className="text-[9px] text-slate-500 leading-tight line-clamp-2">
-                          {getAiReminder(nextNode)}
-                        </p>
-                     </div>
-
-                     {/* Right: Info */}
-                     <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-center mb-0.5">
-                          <h3 className="text-sm font-bold text-slate-800 line-clamp-1">{nextNode?.title}</h3>
-                          <span className="text-[10px] font-bold text-cyan-600 bg-cyan-50/80 px-1.5 py-0.5 rounded-full border border-cyan-100/50 shadow-sm shrink-0">
-                            {nextNode?.status === 'upcoming' ? '进行中' : '即将开始'}
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-slate-400 line-clamp-1 mb-1">
-                          {nextNode?.type === 'flight' 
-                            ? `${nextNode.details.flightNo} ${nextNode.details.status} · 预计${nextNode.details.arrTime}抵达`
-                            : nextNode?.details?.name || '点击查看详情'}
-                        </p>
-                        
-                        <div className="flex items-center gap-2">
-                           <div className="flex items-center gap-1.5 text-slate-400">
-                              {nextNode?.type === 'flight' ? <Plane size={12} /> : <Clock size={12} />}
-                              <span className="text-[10px] font-bold">{nextNode?.time}</span>
-                           </div>
-                        </div>
-                     </div>
-                   </div>
-                 </div>
-               );
-            })() : (
-              <div className="relative z-10 w-full">
-                <div className="flex justify-between items-center mb-3 px-1">
-                   <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                     <Sparkles size={14} className="text-cyan-500" />
-                     为你推荐
-                   </h3>
-                   <span className="text-[10px] text-slate-400">基于您的位置：贵州·贵阳</span>
-                </div>
-                
-                {/* Proactive Service Cards - Horizontal Scroll */}
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-5 px-5 pb-2">
-                   {[
-                     { 
-                       name: "黄果树·小向导", 
-                       role: "景区智能体", 
-                       services: ["景区导览", "停车场导航", "语音讲解"],
-                       color: "purple", 
-                       avatar: getPlaceholder(100, 100, 'Guide')
-                     },
-                     { 
-                       name: "凯宾斯基·管家", 
-                       role: "酒店智能体", 
-                       services: ["房间预订", "会场预订", "客房服务"],
-                       color: "indigo", 
-                       avatar: getPlaceholder(100, 100, 'Butler')
-                     },
-                     { 
-                       name: "老凯里·店长", 
-                       role: "餐饮智能体", 
-                       services: ["桌餐预订", "菜单查看", "排队取号"],
-                       color: "orange", 
-                       avatar: getPlaceholder(100, 100, 'Chef')
-                     }
-                   ].map((agent, i) => (
-                     <div 
-                       key={i} 
-                       className="min-w-[260px] bg-white rounded-[1.2rem] p-4 border border-slate-100 shadow-sm flex flex-col gap-3 relative overflow-hidden active:scale-95 transition-transform cursor-pointer"
-                         onClick={() => {
-                           // Pass specific context to open chat with this agent
-                           handleOpenChat();
-                           // In a real implementation, we would set the initial context for ChatInterface here
-                        }}
-                      >
-                        <div className="flex items-start gap-3">
-                           <div className="relative">
-                              <img src={agent.avatar} alt={agent.name} className="w-14 h-14 rounded-full border-2 border-white shadow-md bg-slate-100 object-cover" />
-                              <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-${agent.color}-100 border-2 border-white flex items-center justify-center`}>
-                                 <Sparkles size={10} className={`text-${agent.color}-600`} />
-                              </div>
-                           </div>
-                           <div className="flex-1 min-w-0 pt-1">
-                              <div className="flex items-center justify-between mb-1.5">
-                                 <h4 className="font-bold text-slate-800 text-sm truncate">{agent.name}</h4>
-                                 <span className={`text-[9px] px-1.5 py-0.5 rounded-full bg-${agent.color}-50 text-${agent.color}-600 font-bold border border-${agent.color}-100 shrink-0`}>{agent.role}</span>
-                              </div>
-                              <div className="flex flex-wrap gap-1.5">
-                                 {agent.services.map((service, idx) => (
-                                    <span key={idx} className={`text-[10px] flex items-center gap-1 px-2 py-1 rounded-lg border bg-${agent.color}-50/50 border-${agent.color}-100 text-${agent.color}-700`}>
-                                       {idx === 0 ? <Check size={8} className={`text-${agent.color}-500`} /> : <div className={`w-1 h-1 rounded-full bg-${agent.color}-400`} />}
-                                       {service}
-                                    </span>
-                                 ))}
-                              </div>
-                           </div>
-                        </div>
-                      </div>
-                   ))}
-                </div>
-              </div>
-            )}
+            {/* Right: B-Side Promo Carousel (4/9 width) */}
+            <div className="col-span-4 h-full">
+               <PromoCarouselWidget />
+            </div>
           </motion.div>
         </div>
       </div>
@@ -577,6 +406,134 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
            />
         )}
       </AnimatePresence>
+    </div>
+  );
+};
+
+const AgentListWidget = ({ handleOpenChat }) => (
+  <div className="bg-white rounded-[2rem] p-4 shadow-lg border border-slate-100 h-full flex flex-col overflow-hidden">
+    <div className="flex items-center justify-between mb-3 px-1 shrink-0">
+      <div className="flex items-center gap-1.5">
+        <div className="w-6 h-6 rounded-full bg-cyan-100 flex items-center justify-center">
+          <MapPin size={12} className="text-cyan-600" />
+        </div>
+        <h3 className="text-sm font-bold text-slate-800">附近智能体</h3>
+      </div>
+      <span className="text-[9px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-full">贵阳</span>
+    </div>
+    
+    <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 pr-1">
+      {[
+        { 
+          name: "黄果树·小向导", 
+          role: "景区", 
+          services: ["导览", "购票"],
+          color: "purple", 
+          avatar: getPlaceholder(100, 100, 'Guide')
+        },
+        { 
+          name: "凯宾斯基·管家", 
+          role: "酒店", 
+          services: ["预订", "客房"],
+          color: "indigo", 
+          avatar: getPlaceholder(100, 100, 'Butler')
+        },
+        { 
+          name: "老凯里·店长", 
+          role: "餐饮", 
+          services: ["排队", "点餐"],
+          color: "orange", 
+          avatar: getPlaceholder(100, 100, 'Chef')
+        },
+        { 
+          name: "神州专车·调度", 
+          role: "交通", 
+          services: ["接机", "包车"],
+          color: "green", 
+          avatar: getPlaceholder(100, 100, 'Driver')
+        }
+      ].map((agent, i) => (
+        <div 
+          key={i} 
+          className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 active:scale-95 transition-all cursor-pointer group"
+          onClick={handleOpenChat}
+        >
+          <div className="relative shrink-0">
+             <img src={agent.avatar} alt={agent.name} className="w-10 h-10 rounded-full border border-slate-100 object-cover" />
+             <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-${agent.color}-100 border border-white flex items-center justify-center`}>
+                <Sparkles size={8} className={`text-${agent.color}-600`} />
+             </div>
+          </div>
+          <div className="flex-1 min-w-0">
+             <div className="flex items-center gap-1.5 mb-0.5">
+                <h4 className="font-bold text-slate-800 text-xs truncate">{agent.name}</h4>
+             </div>
+             <div className="flex gap-1">
+                {agent.services.map((tag, idx) => (
+                   <span key={idx} className="text-[9px] text-slate-400 bg-slate-50 px-1 py-0.5 rounded-md leading-none border border-slate-100 group-hover:bg-white group-hover:border-slate-200 transition-colors">
+                      {tag}
+                   </span>
+                ))}
+             </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const PromoCarouselWidget = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const promos = [
+    { title: "景区联票特惠", desc: "立省 ¥50", color: "bg-orange-500", icon: Ticket },
+    { title: "酒店连住礼遇", desc: "行政酒廊", color: "bg-indigo-500", icon: Hotel },
+    { title: "特色美食套餐", desc: "8.8折起", color: "bg-red-500", icon: Utensils }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % promos.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="bg-white rounded-[2rem] p-4 shadow-lg border border-slate-100 h-full flex flex-col relative overflow-hidden">
+       <div className="flex items-center justify-between mb-3 px-1 relative z-10">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+             <Sparkles size={12} className="text-yellow-500" />
+             特惠服务
+          </h3>
+       </div>
+       
+       <div className="flex-1 relative rounded-2xl overflow-hidden">
+          <AnimatePresence mode="wait">
+             <motion.div
+               key={currentIndex}
+               initial={{ opacity: 0, scale: 1.1 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0 }}
+               transition={{ duration: 0.5 }}
+               className={`absolute inset-0 ${promos[currentIndex].color} flex flex-col items-center justify-center text-white p-4 text-center`}
+             >
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mb-2 backdrop-blur-sm">
+                   {React.createElement(promos[currentIndex].icon, { size: 20, className: "text-white" })}
+                </div>
+                <h4 className="font-bold text-sm mb-1">{promos[currentIndex].title}</h4>
+                <p className="text-xs opacity-90 font-medium bg-white/20 px-2 py-0.5 rounded-full">{promos[currentIndex].desc}</p>
+             </motion.div>
+          </AnimatePresence>
+          
+          {/* Indicators */}
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1 z-10">
+             {promos.map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`w-1 h-1 rounded-full transition-all ${i === currentIndex ? 'bg-white w-3' : 'bg-white/50'}`} 
+                />
+             ))}
+          </div>
+       </div>
     </div>
   );
 };
