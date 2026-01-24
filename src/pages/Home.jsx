@@ -394,7 +394,7 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
                      <Sparkles size={14} className="text-cyan-500" />
                      为你推荐
                    </h3>
-                   <span className="text-[10px] text-slate-400">基于您的偏好</span>
+                   <span className="text-[10px] text-slate-400">基于您的位置：贵州·贵阳</span>
                 </div>
                 
                 {/* Proactive Service Cards - Horizontal Scroll */}
@@ -403,44 +403,55 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav }) =
                      { 
                        name: "黄果树·小向导", 
                        role: "景区智能体", 
-                       desc: "为您规划最佳游览路线，实时避开拥堵，提供语音讲解。", 
+                       services: ["景区导览", "停车场导航", "语音讲解"],
                        color: "purple", 
                        avatar: getPlaceholder(100, 100, 'Guide')
                      },
                      { 
                        name: "凯宾斯基·管家", 
                        role: "酒店智能体", 
-                       desc: "办理入住、客房服务响应、行政酒廊礼遇预约。", 
+                       services: ["房间预订", "会场预订", "客房服务"],
                        color: "indigo", 
                        avatar: getPlaceholder(100, 100, 'Butler')
                      },
                      { 
                        name: "老凯里·店长", 
                        role: "餐饮智能体", 
-                       desc: "在线排队取号，推荐本店必吃特色菜，专属优惠买单。", 
+                       services: ["桌餐预订", "菜单查看", "排队取号"],
                        color: "orange", 
                        avatar: getPlaceholder(100, 100, 'Chef')
                      }
                    ].map((agent, i) => (
                      <div 
                        key={i} 
-                       className="min-w-[240px] bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex flex-col gap-3 relative overflow-hidden active:scale-95 transition-transform cursor-pointer"
-                       onClick={() => handleNav('/chat-planning')}
+                       className="min-w-[260px] bg-white rounded-[1.2rem] p-4 border border-slate-100 shadow-sm flex flex-col gap-3 relative overflow-hidden active:scale-95 transition-transform cursor-pointer"
+                       onClick={() => {
+                          // Pass specific context to open chat with this agent
+                          handleOpenChat();
+                          // In a real implementation, we would set the initial context for ChatInterface here
+                       }}
                      >
-                       <div className="flex items-center gap-3">
-                          <img src={agent.avatar} alt={agent.name} className="w-12 h-12 rounded-full border-2 border-white shadow-sm bg-slate-100 object-cover" />
-                          <div>
-                             <h4 className="font-bold text-slate-800 text-sm">{agent.name}</h4>
-                             <span className={`text-[10px] px-1.5 py-0.5 rounded-md bg-${agent.color}-50 text-${agent.color}-600 font-bold border border-${agent.color}-100`}>{agent.role}</span>
+                       <div className="flex items-start gap-3">
+                          <div className="relative">
+                             <img src={agent.avatar} alt={agent.name} className="w-14 h-14 rounded-full border-2 border-white shadow-md bg-slate-100 object-cover" />
+                             <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-${agent.color}-100 border-2 border-white flex items-center justify-center`}>
+                                <Sparkles size={10} className={`text-${agent.color}-600`} />
+                             </div>
+                          </div>
+                          <div className="flex-1 min-w-0 pt-1">
+                             <div className="flex items-center justify-between mb-1">
+                                <h4 className="font-bold text-slate-800 text-sm truncate">{agent.name}</h4>
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full bg-${agent.color}-50 text-${agent.color}-600 font-bold border border-${agent.color}-100 shrink-0`}>{agent.role}</span>
+                             </div>
+                             <div className="flex flex-wrap gap-1.5">
+                                {agent.services.map((service, idx) => (
+                                   <span key={idx} className="text-[10px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-100">
+                                      {service}
+                                   </span>
+                                ))}
+                             </div>
                           </div>
                        </div>
-                       <div className="bg-slate-50 rounded-xl p-2.5 text-xs text-slate-500 leading-relaxed">
-                          <span className="font-bold text-slate-700">我能帮你：</span>
-                          {agent.desc}
-                       </div>
-                       <button className="w-full py-2 rounded-lg bg-slate-900 text-white text-xs font-bold shadow-md shadow-slate-200">
-                          接入服务
-                       </button>
                      </div>
                    ))}
                 </div>
