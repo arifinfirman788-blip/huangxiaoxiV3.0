@@ -332,7 +332,7 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav, onS
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full mb-8 h-[160px]"
+            className="w-full mb-8 h-[220px]"
           >
             {/* Full Width Agent Recommendation Widget */}
             <div className="h-full">
@@ -675,18 +675,18 @@ const AgentListWidget = ({ handleOpenChat }) => {
               onClick={() => handleOpenChat(agent)}
             >
               {/* Large Avatar - Left Side */}
-              <div className="w-[120px] h-full relative flex items-center justify-center rounded-xl overflow-hidden shrink-0">
+              <div className="w-[120px] h-full relative flex items-center justify-center rounded-xl overflow-hidden shrink-0 py-1">
                  <img 
                     src={agent.avatar} 
                     alt={agent.name} 
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" 
+                    className="w-full h-full object-cover rounded-xl transition-transform group-hover:scale-105 duration-500" 
                     style={{ 
                       objectPosition: agent.objectPosition || 'center top',
                       transform: agent.scale ? `scale(${agent.scale})` : undefined
                     }}
                  />
                  {/* Decorative Overlay Gradient */}
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white/10 opacity-80" />
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white/10 opacity-80 rounded-xl pointer-events-none" />
               </div>
 
               {/* Info Section - Right Side */}
