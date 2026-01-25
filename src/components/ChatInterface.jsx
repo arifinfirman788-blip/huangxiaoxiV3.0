@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, Mic, Plane, Utensils, Flag, Sparkles, Check, ChevronDown, ChevronUp, Star, Info, Car, Camera, Hotel, Loader2, Wand2, RefreshCcw, ArrowRight, Bed, MapPin, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, Send, Mic, Plane, Utensils, Flag, Sparkles, Check, ChevronDown, ChevronUp, Star, Info, Car, Camera, Hotel, Loader2, Wand2, RefreshCcw, ArrowRight, Bed, MapPin, X, ZoomIn, ZoomOut, MessageSquare, Phone } from 'lucide-react';
 import TuoSaiImage from '../image/托腮_1.png';
 import { getPlaceholder } from '../utils/imageUtils';
 
@@ -525,6 +525,51 @@ const InfoRequirementCard = ({ title, requirements, onSubmit }) => {
     );
 };
 
+const AgentGeneratedCard = ({ agent, onConnect }) => {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden shadow-lg border border-indigo-100 w-full">
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-4 -translate-y-4">
+           <Wand2 size={100} />
+        </div>
+        <div className="flex items-center gap-3 relative z-10">
+           <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/30">
+              <Sparkles size={24} className="text-yellow-300" />
+           </div>
+           <div>
+              <div className="text-xs font-bold text-indigo-100 uppercase tracking-wider mb-0.5">AI Generated Agent</div>
+              <h3 className="font-bold text-lg">{agent.name}</h3>
+           </div>
+        </div>
+      </div>
+      
+      <div className="p-4 space-y-4">
+         <div className="flex gap-2">
+            <span className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg border border-indigo-100">
+               {agent.type === 'scenic' ? '景区服务' : agent.type === 'hotel' ? '酒店服务' : agent.type === 'food' ? '餐饮服务' : '生活服务'}
+            </span>
+            <span className="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-100">
+               智能体V3.0
+            </span>
+         </div>
+         
+         <p className="text-xs text-slate-600 leading-relaxed">
+            {agent.description || '该智能体由AI自动生成，已接入相关服务数据，可为您提供专业的咨询与服务。'}
+         </p>
+
+         <div className="pt-2">
+            <button 
+              onClick={onConnect}
+              className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-slate-200 active:scale-95 transition-all"
+            >
+               <MessageSquare size={16} /> 立即对话
+            </button>
+         </div>
+      </div>
+    </div>
+  );
+};
+
 const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onServiceSubmit, onConnectAgent, agentFeedback, merchantMessage, onUserMessage, isHumanMode }) => {
   const scrollRef = useRef(null);
   const [messages, setMessages] = useState([
@@ -685,6 +730,41 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onSe
           id: 1,
           sender: 'agent',
           text: `请问您针对【${node.title || node.details?.name}】景区有什么问题，全都可以问小西哦`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+    } else if (initialContext?.fromSquare) {
+      // Direct Agent Mode for Agent Square
+      const agentType = initialContext.type === 'enterprise' ? 'scenic' : (initialContext.role === '酒店' ? 'hotel' : initialContext.role === '餐饮' ? 'food' : initialContext.role === '交通' ? 'transport' : 'scenic');
+      
+      const agentInfo = getAgentInfo(initialContext.type || agentType);
+      const targetAgent = {
+        ...agentInfo,
+        name: initialContext.name,
+        description: initialContext.intro,
+        // Ensure we use the specific avatar from context if available
+        avatar: initialContext.avatar
+      };
+      
+      setActiveAgent(targetAgent);
+      setCurrentTrip(defaultTrip);
+      
+      const serviceChips = initialContext.services ? initialContext.services.map(s => `我想${s}`) : ['我想咨询', '我想预订'];
+      // Add "Contact Merchant" chip
+      serviceChips.push(`联系${initialContext.name}`);
+
+      setMessages([
+        {
+          id: 1,
+          sender: 'agent',
+          text: `你好！我是${initialContext.name}。${initialContext.intro || '很高兴为您服务。'}`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        },
+        {
+          id: 2,
+          sender: 'agent',
+          type: 'chips',
+          chips: serviceChips,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -895,6 +975,61 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onSe
     // Sync to App if agent active
     if (activeAgent && onUserMessage) {
         onUserMessage(newMsg);
+    }
+
+    // Check for "Generate Agent" intent
+    if (content.includes('生成') && content.includes('智能体')) {
+        setTimeout(() => {
+            setIsTyping(false);
+            
+            // 1. Acknowledge
+            const ackMsg = {
+                id: Date.now() + 1,
+                sender: 'agent',
+                text: '收到！正在为您解析需求并构建智能体模型...',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            dispatchAiResponse(ackMsg);
+
+            // 2. Simulate Generation Process
+            setTimeout(() => {
+                // Determine type and name
+                let type = 'scenic';
+                
+                if (content.includes('酒店')) { type = 'hotel'; }
+                else if (content.includes('餐饮') || content.includes('美食')) { type = 'food'; }
+                else if (content.includes('交通') || content.includes('车')) { type = 'transport'; }
+                
+                // Get base info from helper
+                const baseInfo = getAgentInfo(type);
+
+                // Simple name extraction
+                let name = baseInfo.name;
+                const match = content.match(/生成(?:一个)?(.*?)智能体/);
+                if (match && match[1]) {
+                    name = match[1] + '智能体';
+                }
+
+                const newAgent = {
+                    ...baseInfo,
+                    name: name,
+                    description: `根据您的需求"${content}"生成的专属智能体。`,
+                    tag: 'AI Generated' 
+                };
+
+                const cardMsg = {
+                    id: Date.now() + 2,
+                    sender: 'agent',
+                    type: 'agent_generated_card',
+                    agent: newAgent,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                dispatchAiResponse(cardMsg);
+
+            }, 2000);
+
+        }, 1000);
+        return;
     }
 
     setTimeout(() => {
@@ -1364,11 +1499,16 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onSe
 
   return (
     <motion.div 
-      layoutId="chat-container"
+      layoutId={initialContext?.fromSquare ? null : "chat-container"}
+      initial={initialContext?.fromSquare ? { opacity: 0 } : undefined}
+      animate={initialContext?.fromSquare ? { opacity: 1 } : undefined}
+      exit={initialContext?.fromSquare ? { opacity: 0 } : undefined}
+      transition={{ duration: 0.3 }}
       className="absolute inset-0 z-[100] bg-slate-50 flex flex-col overflow-hidden"
+      style={initialContext?.fromSquare ? { top: 0, bottom: 0, left: 0, right: 0 } : undefined}
     >
       {/* Header */}
-      <header className={`px-4 py-4 flex items-center gap-3 backdrop-blur-md sticky top-0 z-50 border-b transition-colors ${activeAgent ? `${activeAgent.headerBg} ${activeAgent.border}` : 'bg-white/80 border-slate-100'}`}>
+      <header className={`px-4 pb-4 pt-14 flex items-center gap-3 backdrop-blur-md sticky top-0 z-50 border-b transition-colors ${activeAgent ? `${activeAgent.headerBg} ${activeAgent.border}` : 'bg-white/80 border-slate-100'}`}>
         <button 
           onClick={onClose}
           className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${activeAgent ? 'bg-white/50 hover:bg-white/80' : 'bg-slate-100 hover:bg-slate-200'}`}
@@ -1385,7 +1525,11 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onSe
           </div>
         </div>
         <button className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${activeAgent ? 'bg-white/50 hover:bg-white/80' : 'bg-slate-100 hover:bg-slate-200'}`}>
-          <Sparkles size={20} className={activeAgent ? activeAgent.iconColor : "text-cyan-600"} />
+          {activeAgent ? (
+             <Phone size={20} className={activeAgent.iconColor} />
+          ) : (
+             <Sparkles size={20} className="text-cyan-600" />
+          )}
         </button>
       </header>
 
@@ -1446,6 +1590,29 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onSe
                           };
                           setMessages(prev => [...prev, connectedMsg]);
                           setActiveAgent(msg.agentInfo);
+                        }, 1500);
+                     }} 
+                   />
+                </div>
+              ) : msg.type === 'agent_generated_card' ? (
+                <div className="w-full min-w-[300px]">
+                   <AgentGeneratedCard 
+                     agent={msg.agent} 
+                     onConnect={() => {
+                        // Notify App to open workspace (Split View)
+                        if (onConnectAgent) {
+                            onConnectAgent(msg.agent);
+                        }
+
+                        setTimeout(() => {
+                          const connectedMsg = {
+                             id: Date.now(),
+                             sender: 'agent',
+                             text: `已为您成功接入${msg.agent.name}，现在您可以直接与它对话了。`,
+                             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          };
+                          setMessages(prev => [...prev, connectedMsg]);
+                          setActiveAgent(msg.agent);
                         }, 1500);
                      }} 
                    />
@@ -1630,7 +1797,7 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onSe
 
       {/* Input Area */}
       <motion.div 
-        layoutId="input-container"
+        layoutId={initialContext?.fromSquare ? undefined : "input-container"}
         className="absolute bottom-0 left-0 right-0 bg-white p-4 border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
       >
           <div className="flex items-center gap-2 bg-slate-100 rounded-full p-1.5 pl-4">

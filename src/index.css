@@ -6,3 +6,40 @@
     @apply bg-glass-bg backdrop-blur-md border border-glass-border;
   }
 }
+
+@keyframes avatar-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.05);
+  }
+}
+
+.avatar-marker-container {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+}
+
+.avatar-marker-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  position: relative;
+  z-index: 1;
+  background-color: white;
+  animation: avatar-float 3s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+.avatar-marker-img:hover {
+  transform: scale(1.2);
+  z-index: 10;
+}

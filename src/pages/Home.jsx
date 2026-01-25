@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, User, ChevronDown, MessageCircle, Star, Coffee, Building, Landmark, Mic, Plus, Home as HomeIcon, Compass, UserCircle, X, Check, Bell, Languages, Volume2, ArrowUpRight, Plane, Clock, Sparkles, Camera, Car, Play, Calendar as CalendarIcon, Ticket, Hotel, Utensils, RefreshCcw, ArrowRight } from 'lucide-react';
 import { categories } from '../data/agents';
@@ -152,7 +152,48 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav, onS
   const [forceUpdate, setForceUpdate] = useState(0); // Add forceUpdate state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatInitialContext, setChatInitialContext] = useState(null);
+  const [radarBatchIndex, setRadarBatchIndex] = useState(0);
+
   const navigate = useNavigate();
+  const location = useLocation(); // Add useLocation hook
+
+  // Check for openChatWith in location state on mount
+  useEffect(() => {
+    // Ensure we start at the top to prevent layout shifts
+    window.scrollTo(0, 0);
+    
+    if (location.state?.openChatWith) {
+        handleOpenChat(location.state.openChatWith);
+        // Clear state to prevent reopening on refresh (optional but good practice)
+        window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
+  // Radar Agent Batches for rotation
+  const radarBatches = [
+    [
+      { img: ScenicAvatar, className: "top-8 right-12 w-8 h-8", delay: '0s' },
+      { img: HotelAvatar, className: "bottom-20 left-10 w-6 h-6", delay: '1s' },
+      { img: GuideAvatar, className: "top-16 left-1/2 w-7 h-7", delay: '2s' }
+    ],
+    [
+      { img: WangAyiAvatar, className: "top-1/2 right-8 w-7 h-7", delay: '0.5s' },
+      { img: CarAvatar, className: "bottom-12 right-1/3 w-6 h-6", delay: '1.5s' },
+      { img: MuseumAvatar, className: "top-10 left-12 w-8 h-8", delay: '2.5s' }
+    ],
+    [
+      { img: LiuDaGeAvatar, className: "bottom-8 right-12 w-7 h-7", delay: '0.8s' },
+      { img: ScenicAvatar, className: "top-20 left-8 w-6 h-6", delay: '1.2s' },
+      { img: HotelAvatar, className: "top-6 right-1/3 w-8 h-8", delay: '1.8s' }
+    ]
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRadarBatchIndex(prev => (prev + 1) % radarBatches.length);
+    }, 4000); // Rotate every 4 seconds to match radar scan
+    return () => clearInterval(timer);
+  }, []);
 
   // Navigation wrapper to check auth
   const handleNav = (path) => {
@@ -297,6 +338,91 @@ const Home = ({ adoptedTrip, isAuthenticated, onUpdateTrip, toggleBottomNav, onS
             <div className="h-full">
                <AgentListWidget handleOpenChat={handleOpenChat} />
             </div>
+          </motion.div>
+
+          {/* Agent Square Entry */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="w-full mb-8"
+          >
+            <button
+              onClick={() => navigate('/agent-square')}
+              className="w-full bg-white rounded-[2rem] p-5 shadow-xl shadow-slate-100 border border-slate-100 relative overflow-hidden group active:scale-98 transition-transform h-56"
+            >
+              {/* Radar Background Effects */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden opacity-100">
+                  {/* Faint Map Background */}
+                  <div className="absolute inset-0 opacity-20" style={{ 
+                      backgroundImage: 'url("https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=600&auto=format&fit=crop")',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      filter: 'grayscale(100%) contrast(1.2)'
+                  }} />
+                  
+                  {/* Radar Scan Animation - Enhanced Visibility */}
+                  <div 
+                    className="absolute w-[400px] h-[400px] rounded-full animate-spin" 
+                    style={{ 
+                        background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 270deg, rgba(34, 211, 238, 0.1) 300deg, rgba(34, 211, 238, 0.4) 360deg)',
+                        animationDuration: '4s',
+                        animationTimingFunction: 'linear'
+                    }} 
+                  />
+              </div>
+
+              {/* Floating Avatars on Radar - Dynamic Batch */}
+              <AnimatePresence>
+                {radarBatches[radarBatchIndex].map((agent, i) => (
+                  <motion.div
+                    key={`${radarBatchIndex}-${i}`}
+                    initial={{ scale: 0.2, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.2, opacity: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className={`absolute rounded-full border-2 border-white shadow-md overflow-hidden z-10 ${agent.className}`}
+                  >
+                    <div className="w-full h-full" style={{ animation: `avatar-float 3s ease-in-out infinite ${agent.delay}` }}>
+                       <img src={agent.img} className="w-full h-full object-cover" alt="" />
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              <div className="relative z-20 flex flex-col justify-between h-full">
+                <div className="flex justify-between items-start">
+                    <div className="text-left">
+                      <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        智能体广场
+                      </h3>
+                      <p className="text-slate-400 text-xs">
+                        发现身边有趣的智能体
+                      </p>
+                    </div>
+                    <div className="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-cyan-50 group-hover:text-cyan-500 transition-colors">
+                      <ArrowRight size={16} />
+                    </div>
+                </div>
+
+                <div className="mt-auto">
+                  <div className="flex items-center gap-2 mb-2">
+                     <span className="text-xs font-bold text-slate-800">附近热议</span>
+                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  </div>
+                  <div className="flex -space-x-2">
+                     {[ScenicAvatar, HotelAvatar, GuideAvatar, WangAyiAvatar, CarAvatar].map((img, i) => (
+                       <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 overflow-hidden shadow-sm">
+                         <img src={img} className="w-full h-full object-cover" alt="" />
+                       </div>
+                     ))}
+                     <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-50 flex items-center justify-center text-[10px] font-bold text-slate-500 shadow-sm">
+                       +99
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </button>
           </motion.div>
         </div>
       </div>

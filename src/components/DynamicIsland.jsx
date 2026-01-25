@@ -144,7 +144,7 @@ const DynamicIsland = ({ trip }) => {
       className="absolute top-2 left-1/2 bg-black z-[100] text-white overflow-hidden shadow-2xl cursor-pointer"
       variants={containerVariants}
       initial="idle"
-      animate={isExpanded ? "expanded" : notification ? "notification" : "idle"}
+      animate={isExpanded ? "expanded" : "idle"}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       onClick={toggleExpand}
     >
@@ -243,26 +243,6 @@ const DynamicIsland = ({ trip }) => {
                 <p className="text-[10px] text-gray-500">请先规划或导入您的行程</p>
               </div>
             )}
-          </motion.div>
-        ) : notification ? (
-          // NOTIFICATION STATE
-          <motion.div
-            key="notification"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="w-full h-full p-3 px-4 flex items-center gap-3"
-          >
-            <div className={`w-10 h-10 rounded-full ${notification.bgColor || 'bg-white/20'} flex items-center justify-center shrink-0`}>
-               {NotificationIcon ? <NotificationIcon size={20} className={notification.color || 'text-white'} /> : (activeNode ? <CurrentIcon size={20} className="text-white" /> : <Bell size={20} />)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-bold truncate">{notification.title}</h4>
-              <p className="text-xs text-gray-400 truncate">{notification.message}</p>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-               <ChevronRight size={16} className="text-white/50" />
-            </div>
           </motion.div>
         ) : (
           // IDLE STATE (Compact)

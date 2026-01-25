@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, Mic, MapPin, Calendar, Clock, Plane, Bed, Utensils, Flag, Sparkles, Check, ChevronDown, ChevronUp, Star, Info, Car, Camera, Hotel, Headphones, Ticket, Phone, Coffee, FileText, Navigation, Loader2, Wand2, RefreshCcw, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Send, Mic, MapPin, Calendar, Clock, Plane, Bed, Utensils, Flag, Sparkles, Check, ChevronDown, ChevronUp, Star, Info, Car, Camera, Hotel, Headphones, Ticket, Phone, Coffee, FileText, Navigation, Loader2, Wand2, RefreshCcw, ArrowRight, MessageSquare } from 'lucide-react';
 import TuoSaiImage from '../image/托腮_1.png';
 import { getPlaceholder } from '../utils/imageUtils';
 
@@ -332,6 +332,61 @@ const ChatPlanning = ({ onAdoptTrip }) => {
     setInputText('');
     setIsTyping(true);
 
+    // Check for "Generate Agent" intent
+    if (inputText.includes('生成') && inputText.includes('智能体')) {
+        setTimeout(() => {
+            setIsTyping(false);
+            
+            // 1. Acknowledge
+            const ackMsg = {
+                id: Date.now() + 1,
+                sender: 'agent',
+                text: '收到！正在为您解析需求并构建智能体模型...',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            setMessages(prev => [...prev, ackMsg]);
+
+            // 2. Simulate Generation Process
+            setTimeout(() => {
+                // Determine type and name
+                let type = 'scenic';
+                
+                if (inputText.includes('酒店')) { type = 'hotel'; }
+                else if (inputText.includes('餐饮') || inputText.includes('美食')) { type = 'food'; }
+                else if (inputText.includes('交通') || inputText.includes('车')) { type = 'transport'; }
+                
+                // Get base info from helper
+                const baseInfo = getAgentInfo(type);
+
+                // Simple name extraction
+                let name = baseInfo.name;
+                const match = inputText.match(/生成(?:一个)?(.*?)智能体/);
+                if (match && match[1]) {
+                    name = match[1] + '智能体';
+                }
+
+                const newAgent = {
+                    ...baseInfo,
+                    name: name,
+                    description: `根据您的需求"${inputText}"生成的专属智能体。`,
+                    tag: 'AI Generated' 
+                };
+
+                const cardMsg = {
+                    id: Date.now() + 2,
+                    sender: 'agent',
+                    type: 'agent_generated_card',
+                    agent: newAgent,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                setMessages(prev => [...prev, cardMsg]);
+
+            }, 2000);
+
+        }, 1000);
+        return;
+    }
+
     // Simulate AI response
     setTimeout(() => {
       setIsTyping(false);
@@ -478,6 +533,24 @@ const ChatPlanning = ({ onAdoptTrip }) => {
                           setMessages(prev => [...prev, connectedMsg]);
                           setActiveAgent(msg.agentInfo);
                         }, 1500);
+                     }} 
+                   />
+                </div>
+              ) : msg.type === 'agent_generated_card' ? (
+                <div className="w-full min-w-[300px]">
+                   <AgentGeneratedCard 
+                     agent={msg.agent} 
+                     onConnect={() => {
+                        setTimeout(() => {
+                          const connectedMsg = {
+                             id: Date.now(),
+                             sender: 'agent',
+                             text: `已为您成功接入${msg.agent.name}，现在您可以直接与它对话了。`,
+                             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          };
+                          setMessages(prev => [...prev, connectedMsg]);
+                          setActiveAgent(msg.agent);
+                        }, 1000);
                      }} 
                    />
                 </div>
@@ -968,6 +1041,51 @@ const DayPlanCard = ({ plan, onConfirm, onRegenerate }) => {
              </button>
           </div>
        </div>
+    </div>
+  );
+};
+
+const AgentGeneratedCard = ({ agent, onConnect }) => {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden shadow-lg border border-indigo-100 w-full">
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-4 -translate-y-4">
+           <Wand2 size={100} />
+        </div>
+        <div className="flex items-center gap-3 relative z-10">
+           <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/30">
+              <Sparkles size={24} className="text-yellow-300" />
+           </div>
+           <div>
+              <div className="text-xs font-bold text-indigo-100 uppercase tracking-wider mb-0.5">AI Generated Agent</div>
+              <h3 className="font-bold text-lg">{agent.name}</h3>
+           </div>
+        </div>
+      </div>
+      
+      <div className="p-4 space-y-4">
+         <div className="flex gap-2">
+            <span className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg border border-indigo-100">
+               {agent.type === 'scenic' ? '景区服务' : agent.type === 'hotel' ? '酒店服务' : agent.type === 'food' ? '餐饮服务' : '生活服务'}
+            </span>
+            <span className="px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-100">
+               智能体V3.0
+            </span>
+         </div>
+         
+         <p className="text-xs text-slate-600 leading-relaxed">
+            {agent.description || '该智能体由AI自动生成，已接入相关服务数据，可为您提供专业的咨询与服务。'}
+         </p>
+
+         <div className="pt-2">
+            <button 
+              onClick={onConnect}
+              className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-slate-200 active:scale-95 transition-all"
+            >
+               <MessageSquare size={16} /> 立即对话
+            </button>
+         </div>
+      </div>
     </div>
   );
 };

@@ -15,7 +15,7 @@ const MobileWrapper = ({ children, trip, isSplitView, secondaryContent }) => {
             scale: isSplitView ? 0.95 : 1 
           }}
           transition={{ type: "spring", damping: 25, stiffness: 120 }}
-          className="relative w-full max-w-[375px] h-[812px] bg-slate-50 rounded-[3rem] shadow-2xl border-8 border-slate-900 overflow-hidden shrink-0 z-20"
+          className="relative w-[375px] h-[812px] bg-slate-50 rounded-[3rem] shadow-2xl border-8 border-slate-900 overflow-hidden shrink-0 z-20"
         >
           {/* Dynamic Island (Replaces Notch) */}
           <DynamicIsland trip={trip} />
@@ -46,7 +46,7 @@ const MobileWrapper = ({ children, trip, isSplitView, secondaryContent }) => {
               animate={{ opacity: 1, x: -200, scale: 0.95 }}
               exit={{ opacity: 0, x: 50, scale: 0.9 }}
               transition={{ type: "spring", damping: 25, stiffness: 120, delay: 0.1 }}
-              className="relative w-full max-w-[375px] h-[812px] bg-slate-50 rounded-[3rem] shadow-2xl border-8 border-slate-900 overflow-hidden shrink-0 z-10"
+              className="relative w-[375px] h-[812px] bg-slate-50 rounded-[3rem] shadow-2xl border-8 border-slate-900 overflow-hidden shrink-0 z-10"
             >
                {/* Mock Notch for Secondary Phone */}
                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-slate-900 rounded-b-2xl z-50"></div>

@@ -16,6 +16,7 @@ import ChatPlanning from './pages/ChatPlanning';
 import TripDetail from './pages/TripDetail';
 import TripCompare from './pages/TripCompare';
 import Login from './pages/Login';
+import AgentSquare from './pages/AgentSquare';
 import AgentWorkspace from './components/AgentWorkspace';
 
 // Auth Guard Component
@@ -223,6 +224,7 @@ function App() {
             </RequireAuth>
           } />
           <Route path="/news" element={<News />} />
+          <Route path="/agent-square" element={<AgentSquare />} />
           <Route path="/chat-planning" element={
             <RequireAuth isAuthenticated={isAuthenticated}>
               <ChatPlanning onAdoptTrip={setAdoptedTrip} />
