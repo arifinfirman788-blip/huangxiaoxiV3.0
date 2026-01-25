@@ -644,8 +644,8 @@ const AgentListWidget = ({ handleOpenChat }) => {
 
 
   return (
-  <div className="bg-white rounded-[2rem] p-3 shadow-lg border border-slate-100 h-full flex flex-col overflow-hidden">
-    <div className="flex items-center justify-between mb-0.5 px-1 shrink-0">
+  <div className="bg-white rounded-[2rem] p-4 shadow-lg border border-slate-100 h-full flex flex-col overflow-hidden">
+    <div className="flex items-center justify-between mb-2 px-1 shrink-0">
       <div className="flex items-center gap-1">
         <div className="w-5 h-5 rounded-full bg-cyan-100 flex items-center justify-center">
           <MapPin size={10} className="text-cyan-600" />
@@ -658,7 +658,7 @@ const AgentListWidget = ({ handleOpenChat }) => {
       </button>
     </div>
     
-    <div className="flex-1 flex items-center justify-center pt-1 px-1">
+    <div className="flex-1 flex items-center justify-center px-1">
       <AnimatePresence mode="wait">
         <motion.div
           key={refreshKey}
@@ -729,7 +729,7 @@ const AgentListWidget = ({ handleOpenChat }) => {
     </div>
 
     {/* Footer Link */}
-    <div className="mt-1 pt-1 border-t border-slate-50 shrink-0">
+    <div className="mt-2 pt-2 border-t border-slate-50 shrink-0">
       <button className="w-full py-1.5 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-100 hover:border-cyan-100 hover:from-cyan-50 hover:to-white flex items-center justify-center gap-1 group transition-all duration-300 shadow-sm active:scale-95">
         <span className="text-[10px] font-bold text-slate-500 group-hover:text-cyan-600 transition-colors">前往智能体广场</span>
         <ArrowRight size={10} className="text-slate-300 group-hover:text-cyan-500 group-hover:translate-x-0.5 transition-transform" />
