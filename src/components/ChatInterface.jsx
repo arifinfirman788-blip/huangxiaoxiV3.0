@@ -734,19 +734,9 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onSe
         }
       ]);
     } else if (initialContext?.fromSquare) {
-      // Direct Agent Mode for Agent Square
-      const agentType = initialContext.type === 'enterprise' ? 'scenic' : (initialContext.role === '酒店' ? 'hotel' : initialContext.role === '餐饮' ? 'food' : initialContext.role === '交通' ? 'transport' : 'scenic');
+      // Direct Agent Mode for Agent Square - Modified to start with Huang Xiaoxi
+      // We don't set activeAgent here anymore, letting Huang Xiaoxi handle the intro.
       
-      const agentInfo = getAgentInfo(initialContext.type || agentType);
-      const targetAgent = {
-        ...agentInfo,
-        name: initialContext.name,
-        description: initialContext.intro,
-        // Ensure we use the specific avatar from context if available
-        avatar: initialContext.avatar
-      };
-      
-      setActiveAgent(targetAgent);
       setCurrentTrip(defaultTrip);
       
       const serviceChips = initialContext.services ? initialContext.services.map(s => `我想${s}`) : ['我想咨询', '我想预订'];
@@ -757,7 +747,7 @@ const ChatInterface = ({ onAdoptTrip, onClose, initialMode, initialContext, onSe
         {
           id: 1,
           sender: 'agent',
-          text: `你好！我是${initialContext.name}。${initialContext.intro || '很高兴为您服务。'}`,
+          text: `你好！我是黄小西。看到您对【${initialContext.name}】感兴趣，我可以为您调度该智能体为您服务，或者您可以直接告诉我您的需求。`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         },
         {
