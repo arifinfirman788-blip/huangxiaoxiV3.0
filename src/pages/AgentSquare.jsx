@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -7,7 +7,7 @@ import {
   ArrowLeft, Map as MapIcon, Layers, Video, Filter, 
   Search, MapPin, User, Building, Coffee, Car, 
   MessageCircle, Heart, Share2, MoreHorizontal,
-  BadgeCheck, Sparkles, Play, Send, X
+  BadgeCheck, Sparkles, Play, Send, X, Loader2
 } from 'lucide-react';
 
 // Fix Leaflet default icon issue
@@ -21,6 +21,71 @@ let DefaultIcon = L.icon({
     iconAnchor: [12, 41]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
+
+// LazyVideo Component
+const LazyVideo = ({ src, poster, isActive }) => {
+  const videoRef = useRef(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.5 }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isVisible && videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play().catch(() => {
+          // Auto-play might be blocked
+        });
+      }
+    } else if (videoRef.current && !videoRef.current.paused) {
+      videoRef.current.pause();
+    }
+  }, [isVisible]);
+
+  return (
+    <div ref={containerRef} className="absolute inset-0 bg-black">
+      {/* Loading State / Poster */}
+      <div className={`absolute inset-0 transition-opacity duration-500 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}>
+         {poster && <img src={poster} alt="Video poster" className="w-full h-full object-cover" />}
+         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+            <Loader2 className="w-8 h-8 text-white/50 animate-spin" />
+         </div>
+      </div>
+      
+      {/* Video Player */}
+      {(isVisible || isLoaded) && (
+        <video 
+          ref={videoRef}
+          src={src} 
+          className={`w-full h-full object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          loop
+          muted
+          playsInline
+          onLoadedData={() => setIsLoaded(true)}
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 pointer-events-none" />
+    </div>
+  );
+};
 
 // Custom Marker Icons with Avatar and Floating Effect
 const createAvatarIcon = (avatar, color, size = 48) => {
