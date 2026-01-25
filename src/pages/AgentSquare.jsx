@@ -387,18 +387,11 @@ const AgentSquare = () => {
     <div className="h-full w-full bg-black snap-y snap-mandatory overflow-y-scroll scrollbar-hide">
       {mockAgents.map((agent, index) => (
         <div key={agent.id} className="h-full w-full relative snap-start flex items-center justify-center bg-slate-900 shrink-0">
-          {/* Real Video Player */}
-          <div className="absolute inset-0">
-             <video 
-               src={agent.video} 
-               className="w-full h-full object-cover" 
-               autoPlay
-               loop
-               muted
-               playsInline
-             />
-             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
-          </div>
+          {/* Lazy Video Player */}
+          <LazyVideo 
+            src={agent.video} 
+            poster={agent.poster || agent.avatar}
+          />
 
           {/* Right Actions */}
           <div className="absolute right-4 bottom-32 flex flex-col gap-6 items-center z-20">
