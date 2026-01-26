@@ -23,15 +23,7 @@ const Layout = ({ onAdoptTrip, isAuthenticated, hasTrip, isBottomNavVisible = tr
       {/* Bottom Navigation */}
       <AnimatePresence>
         {showBottomNav && isBottomNavVisible && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute bottom-0 left-0 right-0 z-40"
-          >
-            <BottomNav onAdoptTrip={onAdoptTrip} isAuthenticated={isAuthenticated} hasTrip={hasTrip} />
-          </motion.div>
+          <BottomNav onAdoptTrip={onAdoptTrip} isAuthenticated={isAuthenticated} hasTrip={hasTrip} />
         )}
       </AnimatePresence>
     </div>

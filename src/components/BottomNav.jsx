@@ -66,7 +66,7 @@ const BottomNav = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                exit={{ opacity: 0 }}
-               className="absolute inset-0 bg-black/80 z-[35] pointer-events-auto"
+               className="fixed inset-0 bg-black/80 z-[35] pointer-events-auto"
                onClick={() => {
                  // Optional: Allow clicking background to skip? Better not for forced guide.
                }}
@@ -77,7 +77,7 @@ const BottomNav = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
       {/* Guide Tooltip */}
       <AnimatePresence>
          {guideStep > 0 && (
-            <div className="absolute inset-0 z-[60] pointer-events-none">
+            <div className="fixed inset-0 z-[60] pointer-events-none">
                {/* Step 1: Point to Plus Button */}
                {guideStep === 1 && (
                   <motion.div 
@@ -95,7 +95,14 @@ const BottomNav = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
          )}
       </AnimatePresence>
 
-      <div className={`absolute bottom-6 left-4 right-4 z-40 transition-all duration-300 ${guideStep === 1 ? 'scale-105' : ''}`}>
+      <motion.div 
+        key="navbar"
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className={`absolute bottom-6 left-4 right-4 z-40 transition-all duration-300 ${guideStep === 1 ? 'scale-105' : ''}`}
+      >
         <div className={`backdrop-blur-xl border shadow-2xl rounded-2xl px-2 py-3 flex justify-around items-center relative overflow-hidden ${guideStep === 1 ? 'bg-transparent border-white/20' : 'bg-white/80 border-white/50'}`}>
           
           {/* Inner Overlay for Guide Step 1 to dim other icons */}
@@ -158,7 +165,7 @@ const BottomNav = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
             className="relative z-0"
           />
         </div>
-      </div>
+      </motion.div>
 
       {/* Full Screen Overlay Menu */}
       <AnimatePresence>
@@ -167,7 +174,7 @@ const BottomNav = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={`absolute inset-0 z-30 flex flex-col justify-end pb-32 px-6 backdrop-blur-md ${guideStep === 2 ? 'bg-slate-900/90' : 'bg-slate-900/60'}`}
+            className={`fixed inset-0 z-30 flex flex-col justify-end pb-32 px-6 backdrop-blur-md ${guideStep === 2 ? 'bg-slate-900/90' : 'bg-slate-900/60'}`}
             onClick={() => setIsMenuOpen(false)}
           >
             <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
@@ -230,7 +237,7 @@ const BottomNav = ({ onAdoptTrip, isAuthenticated, hasTrip }) => {
                initial={{ opacity: 0, scale: 0.8 }}
                animate={{ opacity: 1, scale: 1 }}
                exit={{ opacity: 0 }}
-               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-2xl shadow-2xl z-[80] text-center w-[80%]"
+               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-2xl shadow-2xl z-[80] text-center w-[80%]"
             >
                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Sparkles size={32} className="text-green-500" />
@@ -401,7 +408,7 @@ const ImportModal = ({ isOpen, onClose, onConfirm, guideStep, setGuideStep }) =>
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="absolute inset-0 z-50 pointer-events-none flex flex-col justify-end">
+        <div className="fixed inset-0 z-50 pointer-events-none flex flex-col justify-end">
           {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }}
